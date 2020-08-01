@@ -26,6 +26,7 @@ import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
 @RestController
 public class GenerationController {
   private static Generator generator;
+
   static {
     PermutationTrie trie = new PermutationTrie();
     URL dictionary = GenerationController.class.getResource("/static/ospd4.txt");
