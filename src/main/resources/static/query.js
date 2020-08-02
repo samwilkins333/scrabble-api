@@ -10,6 +10,11 @@ async function executeQuery(query) {
     return response.json();
 }
 
+const tiles = [];
+for (let i = 0; i < 15; i++) {
+    tiles.push([]);
+}
+
 function cell(c) {
     const cell = document.createElement("div");
     cell.className = "flex centering cell";
@@ -17,6 +22,7 @@ function cell(c) {
     if (c !== '_') {
         input.value = c;
     }
+    input.maxLength = 1;
     cell.append(input);
     return cell;
 }
