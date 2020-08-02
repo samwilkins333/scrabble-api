@@ -25,13 +25,12 @@ import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
 
 @RestController
 public class GenerationController {
-  private static Generator generator;
+  private static PermutationTrie trie;
 
   static {
-    PermutationTrie trie = new PermutationTrie();
+    trie = new PermutationTrie();
     URL dictionary = GenerationController.class.getResource("/static/ospd4.txt");
     trie.loadFrom(dictionary, String::trim);
-    generator = new Generator(trie, STANDARD_RACK_CAPACITY);
   }
 
   @PostMapping("/generate")
@@ -80,7 +79,7 @@ public class GenerationController {
     rack.addAllFromLetters(rackSource);
 
     List<Object> output = response.candidates = new ArrayList<>();
-    List<Candidate> candidates = generator.compute(rack, board, getDefaultOrdering());
+    List<Candidate> candidates = new Generator(trie, STANDARD_RACK_CAPACITY).compute(rack, board, getDefaultOrdering());
     if (context.raw) {
       output.addAll(candidates);
     } else {
