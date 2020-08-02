@@ -1,8 +1,10 @@
 package com.swilkins.scrabbleapi.model;
 
+import java.util.List;
+
 public class GenerationContext {
 
-  public BoardRow[] board;
+  public List<BoardRow> board;
   public String rack;
   public boolean raw;
 

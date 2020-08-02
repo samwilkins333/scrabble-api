@@ -36,15 +36,15 @@ public class GenerationController {
 
   @PostMapping("/generate")
   public GenerationResponse generate(@RequestBody GenerationContext context) {
-    BoardRow[] boardSource = context.board;
-    if (boardSource.length > STANDARD_BOARD_DIMENSIONS) {
+    List<BoardRow> boardSource = context.board;
+    if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
       return null;
     }
     Set<Integer> encounteredRows = new HashSet<>();
     for (BoardRow boardRow : boardSource) {
       int n = boardRow.row;
       if (n < 0 || n >= STANDARD_BOARD_DIMENSIONS || encounteredRows.contains(n) ||
-              !boardRow.tiles.matches(String.format("[a-z\\-]{%d}", STANDARD_BOARD_DIMENSIONS))) {
+              !boardRow.tiles.matches(String.format("[a-zA-Z\\-]{%d}", STANDARD_BOARD_DIMENSIONS))) {
         return null;
       }
       encounteredRows.add(n);
@@ -63,8 +63,15 @@ public class GenerationController {
       BoardSquare[] outputRow = board[inputRow.row];
       for (int x = 0; x < STANDARD_BOARD_DIMENSIONS; x++) {
         char l = inputRow.tiles.charAt(x);
-        if (l != '-') {
-          outputRow[x].setTile(getStandardTile(l));
+        if (Character.isLetter(l)) {
+          Tile tile;
+          if (!Character.isLowerCase(l)) {
+            tile = getStandardTile(Tile.BLANK);
+            tile.setLetterProxy(Character.toLowerCase(l));
+          } else {
+            tile = getStandardTile(l);
+          }
+          outputRow[x].setTile(tile);
         }
       }
     }
