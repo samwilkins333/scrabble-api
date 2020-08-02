@@ -4,8 +4,11 @@ import java.util.List;
 
 public class GenerationResponse {
 
-  public int count;
-  public List<Object> candidates;
   public GenerationContext context;
+  public List<String> serializedBoard;
+  public int count;
+  public int pageSize;
+  public int pageCount;
+  public List<Object> candidates;
 
 }

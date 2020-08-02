@@ -6,6 +6,11 @@ public class GenerationContext {
 
   public List<BoardRow> board;
   public String rack;
-  public boolean raw;
+  public Options options;
+
+  public static class Options {
+    public boolean raw;
+    public Integer pageSize;
+  }
 
 }

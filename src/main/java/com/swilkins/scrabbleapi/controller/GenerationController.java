@@ -1,5 +1,6 @@
 package com.swilkins.scrabbleapi.controller;
 
+import com.google.common.collect.Lists;
 import com.swilkins.ScrabbleBase.Board.State.BoardSquare;
 import com.swilkins.ScrabbleBase.Board.State.Rack;
 import com.swilkins.ScrabbleBase.Board.State.Tile;
@@ -36,6 +37,7 @@ public class GenerationController {
   @PostMapping("/generate")
   public GenerationResponse generate(@RequestBody GenerationContext context) {
     List<BoardRow> boardSource = context.board;
+    GenerationContext.Options options = context.options;
     if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
       return null;
     }
@@ -56,6 +58,7 @@ public class GenerationController {
 
     GenerationResponse response = new GenerationResponse();
     response.context = context;
+    response.pageCount = 1;
 
     BoardSquare[][] board = getStandardBoard();
     for (BoardRow inputRow : boardSource) {
@@ -78,14 +81,28 @@ public class GenerationController {
     Rack rack = new Rack(STANDARD_RACK_CAPACITY);
     rack.addAllFromLetters(rackSource);
 
-    List<Object> output = response.candidates = new ArrayList<>();
+    List<Object> output = new ArrayList<>();
     List<Candidate> candidates = new Generator(trie, STANDARD_RACK_CAPACITY).compute(rack, board, getDefaultOrdering());
-    if (context.raw) {
+    response.pageSize = candidates.size();
+
+    if (options != null && options.raw) {
       output.addAll(candidates);
     } else {
       output.addAll(candidates.stream().map(Candidate::toString).collect(Collectors.toList()));
     }
+    if (options != null && options.pageSize != null) {
+      if (options.pageSize <= 0) {
+        return null;
+      }
+      if (options.pageSize < output.size()) {
+        output = new ArrayList<>(Lists.partition(output, options.pageSize));
+        response.pageSize = options.pageSize;
+        response.pageCount = output.size();
+      }
+    }
+    response.serializedBoard = serializeBoard(board);
     response.count = candidates.size();
+    response.candidates = output;
 
     return response;
   }
