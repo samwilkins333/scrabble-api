@@ -64,7 +64,7 @@ public class GenerationController {
         char l = inputRow.tiles.charAt(x);
         if (Character.isLetter(l)) {
           Tile tile;
-          if (!Character.isLowerCase(l)) {
+          if (Character.isUpperCase(l)) {
             tile = getStandardTile(Tile.BLANK);
             tile.setLetterProxy(Character.toLowerCase(l));
           } else {
