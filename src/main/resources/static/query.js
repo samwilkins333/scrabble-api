@@ -1,13 +1,4 @@
-const query = {
-    board: [
-        {row: 7, tiles: "-------basic---"},
-        {row: 8, tiles: "---------a-----"},
-        {row: 9, tiles: "---------d-----"}
-    ],
-    rack: "*nfjobi"
-};
-
-(async () => {
+async function executeQuery(query) {
     const response = await fetch("/generate", {
         method: "POST",
         headers: {
@@ -16,14 +7,28 @@ const query = {
         },
         body: JSON.stringify(query)
     });
-    const result = await response.json();
+    return response.json();
+}
+
+function cell(c) {
+    const cell = document.createElement("div");
+    cell.className = "flex centering cell";
+    const input = document.createElement("input");
+    if (c !== '_') {
+        input.value = c;
+    }
+    cell.append(input);
+    return cell;
+}
+
+function buildBoard(result) {
     document.body.className = "flex centering";
     const div = document.createElement("div");
     div.className = "flex col";
     let i = 0;
     for (const row of result.serializedBoard) {
         const rowDiv = document.createElement("div");
-        !i++ && rowDiv.append(cell());
+        !i++ && rowDiv.append(cell('_'));
         rowDiv.className = "flex";
         div.append(rowDiv);
         for (const c of row) {
@@ -31,7 +36,9 @@ const query = {
         }
     }
     document.body.append(div);
+}
 
+function buildCandidateList(result) {
     const listDiv = document.createElement("div");
     listDiv.className = "flex col scroll";
     listDiv.style.width = "50%";
@@ -44,15 +51,20 @@ const query = {
         listDiv.append(span);
     }
     document.body.append(listDiv);
-})();
-
-function cell(c) {
-    const cell = document.createElement("div");
-    cell.className = "flex centering cell";
-    if (c !== '_') {
-        const span = document.createElement("span");
-        span.textContent = c;
-        cell.append(span);
-    }
-    return cell;
 }
+
+async function main() {
+    const result = await executeQuery({
+        board: [
+            {row: 7, tiles: "-------basic---"},
+            {row: 8, tiles: "---------a-----"},
+            {row: 9, tiles: "---------d-----"}
+        ],
+        rack: "*nfjobi"
+    });
+    buildBoard(result);
+    buildCandidateList(result);
+    return result;
+}
+
+main().then(console.log);
