@@ -1,0 +1,10 @@
+{
+    "showServerOutput": false,
+    "ports": {
+        "server": 3000,
+        "socket": 4321
+    },
+    "polling": {
+        "intervalSeconds": 5
+    }
+}

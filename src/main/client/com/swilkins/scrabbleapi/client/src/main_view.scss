@@ -1,0 +1,40 @@
+.main-container {
+    font-family: sans-serif;
+    width: 100%;
+    height: 100%;
+}
+
+input {
+    border: none;
+    width: 20px;
+    text-align: center;
+    outline: none;
+}
+
+.flex {
+    display: flex;
+}
+
+.col {
+    flex-direction: column;
+}
+
+.pat20 {
+    margin-top: 20px;
+}
+
+.centering {
+    align-items: center;
+    justify-content: center;
+}
+
+.cell {
+    width: 30px;
+    height: 30px;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+.scroll {
+    overflow: scroll;
+}

@@ -10,7 +10,6 @@ import com.swilkins.ScrabbleBase.Vocabulary.PermutationTrie;
 import com.swilkins.scrabbleapi.model.BoardRow;
 import com.swilkins.scrabbleapi.model.GenerationContext;
 import com.swilkins.scrabbleapi.model.GenerationResponse;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,17 +25,17 @@ import static com.swilkins.ScrabbleBase.Board.Configuration.*;
 import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
 
 @RestController
-public class GenerationController {
+public class  GenerationController {
   private static PermutationTrie trie;
 
   static {
     trie = new PermutationTrie();
-    URL dictionary = GenerationController.class.getResource("/static/ospd4.txt");
+    URL dictionary = GenerationController.class.getResource("/ospd4.txt");
     trie.loadFrom(dictionary, String::trim);
   }
 
-  @PostMapping("/generate")
-  public GenerationResponse generate(@NotNull @RequestBody GenerationContext context) {
+  @PostMapping("/api/generate")
+  public GenerationResponse generate(@RequestBody GenerationContext context) {
     List<BoardRow> boardSource = context.board;
     GenerationContext.Options options = context.options;
     if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
