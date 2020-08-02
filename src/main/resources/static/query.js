@@ -1,3 +1,12 @@
+const query = {
+    board: [
+        {row: 7, tiles: "-------basic---"},
+        {row: 8, tiles: "---------a-----"},
+        {row: 9, tiles: "---------d-----"}
+    ],
+    rack: "*nfjobi"
+};
+
 (async () => {
     const response = await fetch("/generate", {
         method: "POST",
@@ -5,12 +14,7 @@
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-            board: [
-                {row: 7, tiles: "-------basic---"}
-            ],
-            rack: "*nfjobi"
-        })
+        body: JSON.stringify(query)
     });
     const result = await response.json();
     document.body.className = "flex centering";
