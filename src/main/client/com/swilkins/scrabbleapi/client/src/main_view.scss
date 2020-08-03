@@ -1,6 +1,12 @@
-.main-container {
+.ssf {
     font-family: sans-serif;
+}
+
+.w100 {
     width: 100%;
+}
+
+.h100 {
     height: 100%;
 }
 
@@ -9,6 +15,7 @@ input {
     width: 20px;
     text-align: center;
     outline: none;
+    text-transform: uppercase;
 }
 
 .flex {
@@ -33,8 +40,17 @@ input {
     height: 30px;
     border-right: 1px solid black;
     border-bottom: 1px solid black;
+    transition: 0.5s background-color ease;
 }
 
 .scroll {
     overflow: scroll;
+}
+
+.h50 {
+    height: 50%;
+} 
+
+.flexgrow1 {
+    flex-grow: 1;
 }
