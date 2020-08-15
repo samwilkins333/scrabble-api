@@ -1,11 +1,10 @@
 package com.swilkins.scrabbleapi.controller;
 
-import com.google.common.collect.Lists;
 import com.swilkins.ScrabbleBase.Board.State.BoardSquare;
 import com.swilkins.ScrabbleBase.Board.State.Rack;
 import com.swilkins.ScrabbleBase.Board.State.Tile;
-import com.swilkins.ScrabbleBase.Generation.Candidate;
 import com.swilkins.ScrabbleBase.Generation.Generator;
+import com.swilkins.ScrabbleBase.Generation.GeneratorResult;
 import com.swilkins.ScrabbleBase.Vocabulary.PermutationTrie;
 import com.swilkins.scrabbleapi.model.BoardRow;
 import com.swilkins.scrabbleapi.model.GenerationContext;
@@ -19,13 +18,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.swilkins.ScrabbleBase.Board.Configuration.*;
 import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
 
 @RestController
-public class  GenerationController {
+public class GenerationController {
   private static PermutationTrie trie;
 
   static {
@@ -58,7 +56,6 @@ public class  GenerationController {
 
     GenerationResponse response = new GenerationResponse();
     response.context = context;
-    response.pageCount = 1;
 
     BoardSquare[][] board = getStandardBoard();
     for (BoardRow inputRow : boardSource) {
@@ -82,26 +79,24 @@ public class  GenerationController {
     rack.addAllFromLetters(rackSource);
 
     List<Object> output = new ArrayList<>();
-    List<Candidate> candidates = new Generator(trie, STANDARD_RACK_CAPACITY).compute(rack, board, getDefaultOrdering());
-    response.pageSize = candidates.size();
+    GeneratorResult result = new Generator(trie, STANDARD_RACK_CAPACITY).compute(rack, board);
+    result.orderBy(getDefaultOrdering());
+    response.pageSize = result.size();
 
+    boolean paginated =
+            options != null &&
+                    options.pageSize != null &&
+                    options.pageSize > 0 &&
+                    options.pageSize < result.size();
+    response.pageSize = paginated ? options.pageSize : result.size();
     if (options != null && options.raw) {
-      output.addAll(candidates);
+      output.addAll(paginated ? result.asPagedList(options.pageSize) : result.asFlatList());
     } else {
-      output.addAll(candidates.stream().map(Candidate::toString).collect(Collectors.toList()));
+      output.addAll(paginated ? result.asPagedSerializedList(options.pageSize) : result.asFlatSerializedList());
     }
-    if (options != null && options.pageSize != null) {
-      if (options.pageSize <= 0) {
-        return null;
-      }
-      if (options.pageSize < output.size()) {
-        output = new ArrayList<>(Lists.partition(output, options.pageSize));
-        response.pageSize = options.pageSize;
-        response.pageCount = output.size();
-      }
-    }
+    response.pageCount = paginated ? output.size() : 1;
     response.serializedBoard = serializeBoard(board);
-    response.count = candidates.size();
+    response.count = result.size();
     response.candidates = output;
 
     return response;

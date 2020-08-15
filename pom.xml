@@ -117,7 +117,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>src/main/resources/static/client</outputDirectory>
+                            <outputDirectory>src/main/resources/static</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>src/main/client/com/swilkins/scrabbleapi/client/static</directory>
