@@ -90,7 +90,7 @@ public class GenerationController {
                     options.pageSize < result.size();
     response.pageSize = paginated ? options.pageSize : result.size();
     if (options != null && options.raw) {
-      output.addAll(paginated ? result.asPagedList(options.pageSize) : result.asFlatList());
+      output.addAll(result.asNewPlacements());
     } else {
       output.addAll(paginated ? result.asPagedSerializedList(options.pageSize) : result.asFlatSerializedList());
     }
