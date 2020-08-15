@@ -12,11 +12,28 @@ interface Cell {
     ref: React.RefObject<HTMLInputElement>
 }
 
+interface Tile {
+    letter: string;
+    value: number;
+    resolvedLetter: string;
+    letterProxy?: string;
+}
+
+interface TilePlacement {
+    x: number;
+    y: number;
+    tile: Tile
+}
+
+const pageSize = 10;
+
 @observer
 export default class MainView extends React.Component {
     @observable.deep private cellArray: Cell[][] = [];
-    @observable private candidates: string[] = [];
-    private temporary: { x: number, y: number }[] = [];
+    @observable private candidates: TilePlacement[][][] = [];
+    @observable private pageIndex = 0;
+    @observable private pageCount = 0;
+    private currentSelection: TilePlacement[] = [];
 
     constructor(props: {}) {
         super(props);
@@ -59,6 +76,8 @@ export default class MainView extends React.Component {
     }
 
     private submitBoard = async () => {
+        this.currentSelection = [];
+        runInAction(() => this.pageCount = this.pageIndex = 0);
         const board: { row: number, tiles: string  }[] = [];
         for (let y = 0; y < dimensions; y++) {
             const row: string[] = [];
@@ -68,46 +87,79 @@ export default class MainView extends React.Component {
             board.push({ row: y, tiles: row.join("") });
         }
         const rack = "a*febji";
-        const { candidates } = await Server.Post("/api/generate", { board, rack });
-        runInAction(() => this.candidates = candidates);
+        const options = {
+            raw: true,
+            pageSize
+        };
+        const response = await Server.Post("/api/generate", { board, rack, options });
+        runInAction(() => {
+            this.candidates = response.candidates;
+            this.pageCount = response.pageCount;
+        });
     };
+
+    @action
+    private setValueAt = (x: number, y: number, value: string) => {
+        const cell = this.cellArray[y][x];
+        cell.active = value !== "";
+        const { current } = cell.ref;
+        current && (current.value = value);
+    };
+
+    private display = (candidate: TilePlacement[]) => {
+      const word = candidate.map(({ tile }) => {
+          return tile.letterProxy ? tile.resolvedLetter.toUpperCase() : tile.resolvedLetter;
+      }).join("");
+      const location = candidate.map(({ x, y }) => {
+        return `(${x},${y})`
+      }).join(" ");
+      return `${word} [${location}]`;
+    };
+
+    private clear = () => {
+        for (const { x, y } of this.currentSelection) {
+            this.setValueAt(x, y, "");
+        }
+    };
+
+    private get currentPage() {
+        return this.pageIndex >= this.candidates.length ? [] : this.candidates[this.pageIndex]
+    }
 
     render() {
         return (
             <div className={"ssf w100 h100 flex col centering"}>
-                <div className={"flex h50 w100 flexgrow1"}>
+                <div className={"flex h50 w100 scroll flexgrow1"}>
                     {this.cells}
-                    <div className={"flex col scroll"}>
-                        {this.candidates.map(candidate => (
+                    <div className={"flex col"}>
+                        {this.currentPage.map(candidate => (
                             <span
                                 onClick={() => {
-                                    for (const { x, y } of this.temporary) {
-                                        const element = this.cellArray[y][x].ref.current;
-                                        element && (element.value = "");
-                                    }
-                                    this.temporary = [];
-                                    const matches = /\[([^\[\]]+)\]/.exec(candidate)!;
-                                    const placementsRaw = matches[1];
-                                    let placementMatch: RegExpExecArray | null;
-                                    const regex = /([a-z\*\{\}]+)\((\d+), (\d+)\)/g;
-                                    while ((placementMatch = regex.exec(placementsRaw))) {
-                                        const x = Number(placementMatch[2]);
-                                        const y = Number(placementMatch[3]);
-                                        const element = this.cellArray[y][x].ref.current;
-                                        if (element) {
-                                            element.value = placementMatch[1].replace(/[\{*\}]+/g, "");
-                                            this.temporary.push({ x, y, });
-                                        }
+                                    this.clear();
+                                    for (const { x, y, tile: { resolvedLetter } } of this.currentSelection = candidate) {
+                                        this.setValueAt(x, y, resolvedLetter);
                                     }
                                 }}
-                            >{candidate}</span>
+                            >{this.display(candidate)}</span>
                         ))}
                     </div>
                 </div>
-                <button
-                    className={"pat20"}
-                    onClick={this.submitBoard}
-                >Submit</button>
+                <div className={"flex col ma-v20"}>
+                    <button onClick={this.submitBoard}>Submit</button>
+                    <div className={"flex"}>
+                        <button onClick={action(() => {
+                            this.clear();
+                            const previous = this.pageIndex - 1;
+                            this.pageIndex = previous < 0 ? this.pageCount - 1 : previous;
+                        })}>Previous Page</button>
+                        <span>{this.pageIndex + 1} / {this.pageCount}</span>
+                        <button onClick={action(() => {
+                            this.clear();
+                            const next = this.pageIndex + 1;
+                            this.pageIndex = next == this.pageCount ? 0 : next;
+                        })}>Next Page</button>
+                    </div>
+                </div>
             </div>
         );
     }

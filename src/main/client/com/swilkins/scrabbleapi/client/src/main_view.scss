@@ -2,6 +2,12 @@
     font-family: sans-serif;
 }
 
+#root, html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+
 .w100 {
     width: 100%;
 }
@@ -26,8 +32,9 @@ input {
     flex-direction: column;
 }
 
-.pat20 {
+.ma-v20 {
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .centering {
@@ -49,7 +56,7 @@ input {
 
 .h50 {
     height: 50%;
-} 
+}
 
 .flexgrow1 {
     flex-grow: 1;

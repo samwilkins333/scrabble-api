@@ -1,5 +1,7 @@
 package com.swilkins.scrabbleapi.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.swilkins.ScrabbleBase.Board.State.BoardSquare;
 import com.swilkins.ScrabbleBase.Board.State.Rack;
 import com.swilkins.ScrabbleBase.Board.State.Tile;
@@ -33,7 +35,7 @@ public class GenerationController {
   }
 
   @PostMapping("/api/generate")
-  public GenerationResponse generate(@RequestBody GenerationContext context) {
+  public String generate(@RequestBody GenerationContext context) throws JsonProcessingException {
     List<BoardRow> boardSource = context.board;
     GenerationContext.Options options = context.options;
     if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
@@ -83,23 +85,23 @@ public class GenerationController {
     result.orderBy(getDefaultOrdering());
     response.pageSize = result.size();
 
-    boolean paginated =
+    Integer resolvedPageSize =
             options != null &&
                     options.pageSize != null &&
                     options.pageSize > 0 &&
-                    options.pageSize < result.size();
-    response.pageSize = paginated ? options.pageSize : result.size();
+                    options.pageSize < result.size() ? options.pageSize : null;
+    response.pageSize = resolvedPageSize != null ? resolvedPageSize : result.size();
     if (options != null && options.raw) {
-      output.addAll(result.asNewPlacements());
+      output.addAll(result.asNewPlacementsList(resolvedPageSize));
     } else {
-      output.addAll(paginated ? result.asPagedSerializedList(options.pageSize) : result.asFlatSerializedList());
+      output.addAll(result.asSerializedList(resolvedPageSize));
     }
-    response.pageCount = paginated ? output.size() : 1;
+    response.pageCount = resolvedPageSize != null ? output.size() : 1;
     response.serializedBoard = serializeBoard(board);
     response.count = result.size();
     response.candidates = output;
 
-    return response;
+    return new ObjectMapper().writeValueAsString(response);
   }
 
 }

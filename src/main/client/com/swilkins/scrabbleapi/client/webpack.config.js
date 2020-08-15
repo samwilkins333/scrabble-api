@@ -1,5 +1,5 @@
 const { resolve } = require("path");
-const Copy = require('copy-webpack-plugin');
+// const Copy = require('copy-webpack-plugin');
 const static = resolve(__dirname, "static");
 
 module.exports = {
@@ -22,11 +22,11 @@ module.exports = {
         net: 'empty',
         tls: 'empty'
     },
-    plugins: [
-        new Copy([
-            { from: resolve(__dirname, "src/assets") , to: static }
-        ])
-    ],
+    // plugins: [
+    //     new Copy([
+    //         { from: resolve(__dirname, "src/assets") , to: static }
+    //     ])
+    // ],
     module: {
         rules: [
             {
