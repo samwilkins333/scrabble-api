@@ -31,8 +31,15 @@ public abstract class Debugger {
   public Debugger() throws IllegalArgumentException {
     debuggerModel = new DebuggerModel();
 
-    for (Class<?> clazz : new Reflections(packageName = getClass().getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
-      scannedDebugClassSources.put(clazz.getAnnotation(DebugClassSource.class), clazz);
+    Class<?> thisClass = getClass();
+    for (Class<?> sourceClass : new Reflections(packageName = thisClass.getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
+      DebugClassSource annotation = sourceClass.getAnnotation(DebugClassSource.class);
+      for (Class<?> debuggerClass : annotation.debuggerClasses()) {
+        if (debuggerClass.equals(thisClass)) {
+          scannedDebugClassSources.put(annotation, sourceClass);
+          break;
+        }
+      }
     }
 
     List<DebugClassSource> mainSources = scannedDebugClassSources.keySet().stream().filter(DebugClassSource::main).collect(Collectors.toList());
