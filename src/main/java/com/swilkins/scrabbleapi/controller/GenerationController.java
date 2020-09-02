@@ -23,7 +23,7 @@ import java.util.Set;
 
 import static com.swilkins.ScrabbleBase.Board.Configuration.*;
 import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
-import static com.swilkins.scrabbleapi.ScrabbleApiApplication.dereferencedVariables;
+import static com.swilkins.scrabbleapi.FibonacciDebugger.dereferencedVariables;
 
 @RestController
 public class GenerationController {

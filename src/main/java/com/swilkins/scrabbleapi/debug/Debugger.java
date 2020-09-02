@@ -4,7 +4,6 @@ import com.sun.jdi.*;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.event.*;
-import com.swilkins.scrabbleapi.view.DebuggerWatchView;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -16,7 +15,6 @@ public abstract class Debugger {
 
   protected VirtualMachine virtualMachine;
 
-  protected DebuggerWatchView debuggerWatchView = null;
   protected final DebuggerModel debuggerModel;
   private final Class<?> virtualMachineTargetClass;
   private final Object[] virtualMachineArguments;
@@ -33,7 +31,7 @@ public abstract class Debugger {
 
     configureDereferencers();
 
-    start();
+    this.start();
   }
 
   private void start() {
@@ -103,19 +101,9 @@ public abstract class Debugger {
     onVirtualMachineContinuation();
   }
 
-  protected void onVirtualMachineSuspension(DebugClassLocation location, Map<String, Object> dereferencedVariables) {
-    if (debuggerWatchView != null) {
-      debuggerWatchView.setEnabled(true);
-      debuggerWatchView.updateFrom(location, dereferencedVariables);
-    }
-  }
+  protected abstract void onVirtualMachineSuspension(DebugClassLocation location, Map<String, Object> dereferencedVariables);
 
-  protected void onVirtualMachineContinuation() {
-    if (debuggerWatchView != null) {
-      debuggerWatchView.setEnabled(false);
-      debuggerWatchView.clean();
-    }
-  }
+  protected abstract void onVirtualMachineContinuation();
 
   protected void onVirtualMachineTermination(String virtualMachineOut, String virtualMachineError) {
     if (virtualMachineOut != null && !virtualMachineOut.isEmpty()) {
