@@ -34,6 +34,7 @@ public class ScrabbleApiApplication {
     LaunchingConnector launchingConnector = Bootstrap.virtualMachineManager().defaultConnector();
     Map<String, Connector.Argument> arguments = launchingConnector.defaultArguments();
     arguments.get("main").setValue(Fibonacci.class.getName() + " " + args[0]);
+    arguments.get("options").setValue("-cp target/classes");
     try {
       VirtualMachine virtualMachine = launchingConnector.launch(arguments);
       virtualMachine.eventRequestManager().createExceptionRequest(null, true, true).enable();
