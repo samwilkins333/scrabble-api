@@ -3,10 +3,9 @@ package com.swilkins.scrabbleapi;
 import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 
 @DebugClassSource(
-        sourcePath = "/src/Fibonacci.java",
         main = true,
         args = {"10"},
-        compileTimeBreakpoints = {29},
+        compileTimeBreakpoints = {28},
         cached = true
 )
 public class Fibonacci {

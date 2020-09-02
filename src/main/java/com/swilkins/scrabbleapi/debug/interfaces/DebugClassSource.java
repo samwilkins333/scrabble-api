@@ -9,8 +9,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DebugClassSource {
 
-  String sourcePath();
-
   boolean main() default false;
 
   String[] args() default {};

@@ -21,6 +21,7 @@ public abstract class Debugger {
   protected final DebuggerModel debuggerModel;
   protected final Map<DebugClassSource, Class<?>> scannedDebugClassSources = new HashMap<>();
 
+  private final String packageName;
   private final Class<?> virtualMachineTargetClass;
   private final String[] virtualMachineArguments;
 
@@ -30,7 +31,7 @@ public abstract class Debugger {
   public Debugger() throws IllegalArgumentException {
     debuggerModel = new DebuggerModel();
 
-    for (Class<?> clazz : new Reflections(getClass().getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
+    for (Class<?> clazz : new Reflections(packageName = getClass().getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
       scannedDebugClassSources.put(clazz.getAnnotation(DebugClassSource.class), clazz);
     }
 
@@ -100,10 +101,12 @@ public abstract class Debugger {
   protected void configureDebuggerModel() {
     for (Map.Entry<DebugClassSource, Class<?>> entry : scannedDebugClassSources.entrySet()) {
       DebugClassSource annotation = entry.getKey();
-      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(entry.getValue(), new com.swilkins.scrabbleapi.debug.DebugClassSource(annotation.compileTimeBreakpoints()) {
+      Class<?> clazz = entry.getValue();
+      String sourcePath = String.format("/src/%s.java", clazz.getName().replace(packageName, "").substring(1).replace(".", "/"));
+      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(clazz, new com.swilkins.scrabbleapi.debug.DebugClassSource(annotation.compileTimeBreakpoints()) {
         @Override
         public String getContentsAsString() throws Exception {
-          return IOUtils.toString(getClass().getResourceAsStream(annotation.sourcePath()), StandardCharsets.UTF_8);
+          return IOUtils.toString(getClass().getResourceAsStream(sourcePath), StandardCharsets.UTF_8);
         }
       });
       debugClassSource.setCached(annotation.cached());
