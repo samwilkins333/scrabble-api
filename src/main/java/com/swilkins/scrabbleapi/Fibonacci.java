@@ -1,5 +1,8 @@
 package com.swilkins.scrabbleapi;
 
+import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
+
+@DebugClassSource(cached = true, compileTimeBreakpoints = {23})
 public class Fibonacci {
 
   public static void main(String[] args) throws NumberFormatException {

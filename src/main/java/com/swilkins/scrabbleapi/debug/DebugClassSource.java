@@ -8,23 +8,13 @@ public abstract class DebugClassSource {
   private final List<Integer> compileTimeBreakpoints = new ArrayList<>();
   private boolean cached;
 
-  public DebugClassSource(boolean cached, int... compileTimeBreakpoints) {
-    this.cached = cached;
-    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
-  }
-
   public abstract String getContentsAsString() throws Exception;
 
   public List<Integer> getCompileTimeBreakpoints() {
     return compileTimeBreakpoints;
   }
 
-  public DebugClassSource addCompileTimeBreakpoints(int... compileTimeBreakpoints) {
-    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
-    return this;
-  }
-
-  private void addCompileTimeBreakpointsHelper(int... compileTimeBreakpoints) {
+  public void addCompileTimeBreakpoints(int... compileTimeBreakpoints) {
     for (int compileTimeBreakpoint : compileTimeBreakpoints) {
       this.compileTimeBreakpoints.add(compileTimeBreakpoint);
     }

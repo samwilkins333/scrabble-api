@@ -6,6 +6,7 @@ import com.swilkins.scrabbleapi.debug.DebugClassSource;
 import com.swilkins.scrabbleapi.debug.Debugger;
 import org.apache.commons.io.IOUtils;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,9 +22,9 @@ public class FibonacciDebugger extends Debugger {
 
   @Override
   protected void configureDebuggerModel() {
-    debuggerModel.addDebugClassSource(Fibonacci.class, new DebugClassSource(true, 11) {
+    debuggerModel.addDebugClassSource(Fibonacci.class, new DebugClassSource() {
       @Override
-      public String getContentsAsString() throws Exception {
+      public String getContentsAsString() throws IOException {
         return IOUtils.toString(getClass().getResourceAsStream("/src/Fibonacci.java"), StandardCharsets.UTF_8);
       }
     });

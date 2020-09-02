@@ -79,7 +79,7 @@ public class DebuggerModel {
     while (entries.hasMoreElements()) {
       sources.add(entries.nextElement().getRealName());
     }
-    return processSourcesList(sources, filter, source -> new DebugClassSource(false) {
+    return processSourcesList(sources, filter, source -> new DebugClassSource() {
       @Override
       public String getContentsAsString() throws Exception {
         return IOUtils.toString(jarFile.getInputStream(jarFile.getEntry(source)), StandardCharsets.UTF_8);
@@ -93,7 +93,7 @@ public class DebuggerModel {
       throw new IllegalArgumentException();
     }
     List<String> sources = Files.list(directory.toPath()).map(Path::toString).collect(Collectors.toList());
-    return processSourcesList(sources, filter, source -> new DebugClassSource(false) {
+    return processSourcesList(sources, filter, source -> new DebugClassSource() {
       @Override
       public String getContentsAsString() throws Exception {
         return IOUtils.toString(new FileInputStream(new File(source)), StandardCharsets.UTF_8);

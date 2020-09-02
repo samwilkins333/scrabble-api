@@ -4,7 +4,9 @@ import com.sun.jdi.*;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.event.*;
+import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 import org.apache.commons.io.IOUtils;
+import org.reflections.Reflections;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +30,15 @@ public abstract class Debugger {
 
     debuggerModel = new DebuggerModel();
     configureDebuggerModel();
+
+    for (Class<?> clazz : new Reflections(getClass().getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
+      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.getDebugClassSourceFor(clazz);
+      if (debugClassSource != null) {
+        DebugClassSource annotation = clazz.getAnnotation(DebugClassSource.class);
+        debugClassSource.setCached(annotation.cached());
+        debugClassSource.addCompileTimeBreakpoints(annotation.compileTimeBreakpoints());
+      }
+    }
 
     configureDereferencers();
 
