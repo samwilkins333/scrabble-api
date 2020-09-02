@@ -2,7 +2,13 @@ package com.swilkins.scrabbleapi;
 
 import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 
-@DebugClassSource(cached = true, compileTimeBreakpoints = {23})
+@DebugClassSource(
+        main = true,
+        sourcePath = "/src/Fibonacci.java",
+        args = {"10"},
+        cached = true,
+        compileTimeBreakpoints = {29}
+)
 public class Fibonacci {
 
   public static void main(String[] args) throws NumberFormatException {

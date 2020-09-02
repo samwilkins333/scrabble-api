@@ -9,8 +9,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DebugClassSource {
 
-  int[] compileTimeBreakpoints();
-
+  boolean main() default false;
+  String sourcePath();
+  String[] args() default {};
+  int[] compileTimeBreakpoints() default {};
   boolean cached();
 
 }

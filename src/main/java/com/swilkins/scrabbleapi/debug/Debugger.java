@@ -12,33 +12,38 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public abstract class Debugger {
 
   protected VirtualMachine virtualMachine;
 
   protected final DebuggerModel debuggerModel;
+  protected final Map<DebugClassSource, Class<?>> scannedDebugClassSources = new HashMap<>();
+
   private final Class<?> virtualMachineTargetClass;
-  private final Object[] virtualMachineArguments;
+  private final String[] virtualMachineArguments;
 
   protected final Map<Class<?>, Dereferencer> dereferencerMap = new HashMap<>();
   protected final Dereferencer toString = (object, thread) -> standardDereference(object, "toString", thread);
 
-  public Debugger(Class<?> virtualMachineTargetClass, Object... virtualMachineArguments) throws Exception {
-    this.virtualMachineTargetClass = virtualMachineTargetClass;
-    this.virtualMachineArguments = virtualMachineArguments;
-
+  public Debugger() throws IllegalArgumentException {
     debuggerModel = new DebuggerModel();
-    configureDebuggerModel();
 
     for (Class<?> clazz : new Reflections(getClass().getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
-      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.getDebugClassSourceFor(clazz);
-      if (debugClassSource != null) {
-        DebugClassSource annotation = clazz.getAnnotation(DebugClassSource.class);
-        debugClassSource.setCached(annotation.cached());
-        debugClassSource.addCompileTimeBreakpoints(annotation.compileTimeBreakpoints());
-      }
+      scannedDebugClassSources.put(clazz.getAnnotation(DebugClassSource.class), clazz);
     }
+
+    List<DebugClassSource> mainSources = scannedDebugClassSources.keySet().stream().filter(DebugClassSource::main).collect(Collectors.toList());
+    if (mainSources.size() != 1) {
+      throw new IllegalArgumentException();
+    }
+
+    DebugClassSource main = mainSources.get(0);
+    virtualMachineTargetClass = scannedDebugClassSources.get(main);
+    virtualMachineArguments = main.args();
+
+    configureDebuggerModel();
 
     configureDereferencers();
 
@@ -92,13 +97,26 @@ public abstract class Debugger {
     }
   }
 
-  protected abstract void configureDebuggerModel() throws IOException, ClassNotFoundException;
+  protected void configureDebuggerModel() {
+    for (Map.Entry<DebugClassSource, Class<?>> entry : scannedDebugClassSources.entrySet()) {
+      DebugClassSource annotation = entry.getKey();
+      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(entry.getValue(), new com.swilkins.scrabbleapi.debug.DebugClassSource(annotation.compileTimeBreakpoints()) {
+        @Override
+        public String getContentsAsString() throws Exception {
+          return IOUtils.toString(getClass().getResourceAsStream(annotation.sourcePath()), StandardCharsets.UTF_8);
+        }
+      });
+      debugClassSource.setCached(annotation.cached());
+    }
+  }
 
   protected void configureDereferencers() {
     dereferencerMap.put(AbstractCollection.class, (extendsAbstractCollection, thread) -> standardDereference(extendsAbstractCollection, "toArray", thread));
   }
 
-  protected abstract void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments);
+  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments) {
+    arguments.get("options").setValue("-cp target/classes");
+  }
 
   protected void onVirtualMachineLocatableEvent(LocatableEvent event, int eventSetSize) throws Exception {
     DebugClassLocation location = debuggerModel.toDebugClassLocation(event.location());
