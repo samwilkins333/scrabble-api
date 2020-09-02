@@ -102,13 +102,16 @@ public abstract class Debugger {
     for (Map.Entry<DebugClassSource, Class<?>> entry : scannedDebugClassSources.entrySet()) {
       DebugClassSource annotation = entry.getKey();
       Class<?> clazz = entry.getValue();
-      String sourcePath = String.format("/src/%s.java", clazz.getName().replace(packageName, "").substring(1).replace(".", "/"));
-      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(clazz, new com.swilkins.scrabbleapi.debug.DebugClassSource(annotation.compileTimeBreakpoints()) {
-        @Override
-        public String getContentsAsString() throws Exception {
-          return IOUtils.toString(getClass().getResourceAsStream(sourcePath), StandardCharsets.UTF_8);
-        }
-      });
+      String internalPath = clazz.getName().replace(packageName, "").substring(1).replace(".", "/");
+      String sourcePath = String.format("/src/%s.java", internalPath);
+      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(clazz,
+              new com.swilkins.scrabbleapi.debug.DebugClassSource() {
+                @Override
+                public String getContentsAsString() throws Exception {
+                  return IOUtils.toString(getClass().getResourceAsStream(sourcePath), StandardCharsets.UTF_8);
+                }
+              });
+      debugClassSource.addCompileTimeBreakpoints(annotation.compileTimeBreakpoints());
       debugClassSource.setCached(annotation.cached());
     }
   }

@@ -9,8 +9,20 @@ public abstract class DebugClassSource {
   private final List<Integer> compileTimeBreakpoints = new ArrayList<>();
   private boolean cached;
 
+  public DebugClassSource(boolean cached, int... compileTimeBreakpoints) {
+    this.cached = cached;
+    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
+  }
+
+  public DebugClassSource(boolean cached) {
+    this.cached = cached;
+  }
+
   public DebugClassSource(int... compileTimeBreakpoints) {
     addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
+  }
+
+  public DebugClassSource() {
   }
 
   public abstract String getContentsAsString() throws Exception;
