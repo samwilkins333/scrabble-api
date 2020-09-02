@@ -1,16 +1,16 @@
 {
-    "compilerOptions": {
-        "target": "es5",
-        "removeComments": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "strict": true,
-        "jsx": "react",
-        "allowJs": true,
-        "sourceMap": true,
-        "lib": [
-            "dom",
-            "es2015"
-        ]
-    },
+  "compilerOptions": {
+    "target": "es5",
+    "removeComments": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "jsx": "react",
+    "allowJs": true,
+    "sourceMap": true,
+    "lib": [
+      "dom",
+      "es2015"
+    ]
+  }
 }

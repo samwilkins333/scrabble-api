@@ -1,6 +1,6 @@
 import * as request from "request-promise";
 
-const { origin } = window.location;
+const {origin} = window.location;
 
 export function url(target: string) {
     return `url(images/${target})`;
@@ -22,7 +22,7 @@ export namespace Server {
     }
 
     export async function Get(relativeRoute: string) {
-        return handleRequest({ uri: origin + relativeRoute });
+        return handleRequest({uri: origin + relativeRoute});
     }
 
     async function handleRequest(parameters: request.OptionsWithUri) {

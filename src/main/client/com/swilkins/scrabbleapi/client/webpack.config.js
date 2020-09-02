@@ -1,4 +1,4 @@
-const { resolve } = require("path");
+const {resolve} = require("path");
 // const Copy = require('copy-webpack-plugin');
 const static = resolve(__dirname, "static");
 
@@ -32,7 +32,7 @@ module.exports = {
             {
                 test: [/\.tsx?$/],
                 use: [
-                    { loader: 'ts-loader', options: { transpileOnly: true } }
+                    {loader: 'ts-loader', options: {transpileOnly: true}}
                 ]
             },
             {

@@ -1,13 +1,12 @@
-
 import * as React from "react";
 import "./main_view.scss";
-import { observer } from "mobx-react";
-import { observable, runInAction, action } from "mobx";
+import {observer} from "mobx-react";
+import {action, observable, runInAction} from "mobx";
 import {Server} from "./utilities";
 
 const dimensions = 15;
 
-interface Cell { 
+interface Cell {
     active: boolean,
     ref: React.RefObject<HTMLInputElement>
 }
@@ -40,7 +39,7 @@ export default class MainView extends React.Component {
         for (let y = 0; y < dimensions; y++) {
             const row: Cell[] = [];
             for (let x = 0; x < dimensions; x++) {
-                row.push({ active: false, ref: React.createRef() });
+                row.push({active: false, ref: React.createRef()});
             }
             this.cellArray.push(row);
         }
@@ -51,7 +50,7 @@ export default class MainView extends React.Component {
         for (let y = 0; y < dimensions; y++) {
             const row: JSX.Element[] = [];
             for (let x = 0; x < dimensions; x++) {
-                const { active, ref } = this.cellArray[y][x];
+                const {active, ref} = this.cellArray[y][x];
                 row.push(
                     <div className={"flex"}>
                         <input
@@ -78,20 +77,20 @@ export default class MainView extends React.Component {
     private submitBoard = async () => {
         this.currentSelection = [];
         runInAction(() => this.pageCount = this.pageIndex = 0);
-        const board: { row: number, tiles: string  }[] = [];
+        const board: { row: number, tiles: string }[] = [];
         for (let y = 0; y < dimensions; y++) {
             const row: string[] = [];
             for (let x = 0; x < dimensions; x++) {
                 row.push(this.cellArray[y][x].ref.current?.value || "-");
             }
-            board.push({ row: y, tiles: row.join("") });
+            board.push({row: y, tiles: row.join("")});
         }
         const rack = "a*febji";
         const options = {
             raw: true,
             pageSize
         };
-        const response = await Server.Post("/api/generate", { board, rack, options });
+        const response = await Server.Post("/api/generate", {board, rack, options});
         runInAction(() => {
             this.candidates = response.candidates;
             this.pageCount = response.pageCount;
@@ -102,22 +101,22 @@ export default class MainView extends React.Component {
     private setValueAt = (x: number, y: number, value: string) => {
         const cell = this.cellArray[y][x];
         cell.active = value !== "";
-        const { current } = cell.ref;
+        const {current} = cell.ref;
         current && (current.value = value);
     };
 
     private display = (candidate: TilePlacement[]) => {
-      const word = candidate.map(({ tile }) => {
-          return tile.letterProxy ? tile.resolvedLetter.toUpperCase() : tile.resolvedLetter;
-      }).join("");
-      const location = candidate.map(({ x, y }) => {
-        return `(${x},${y})`
-      }).join(" ");
-      return `${word} [${location}]`;
+        const word = candidate.map(({tile}) => {
+            return tile.letterProxy ? tile.resolvedLetter.toUpperCase() : tile.resolvedLetter;
+        }).join("");
+        const location = candidate.map(({x, y}) => {
+            return `(${x},${y})`
+        }).join(" ");
+        return `${word} [${location}]`;
     };
 
     private clear = () => {
-        for (const { x, y } of this.currentSelection) {
+        for (const {x, y} of this.currentSelection) {
             this.setValueAt(x, y, "");
         }
     };
@@ -136,7 +135,7 @@ export default class MainView extends React.Component {
                             <span
                                 onClick={() => {
                                     this.clear();
-                                    for (const { x, y, tile: { resolvedLetter } } of this.currentSelection = candidate) {
+                                    for (const {x, y, tile: {resolvedLetter}} of this.currentSelection = candidate) {
                                         this.setValueAt(x, y, resolvedLetter);
                                     }
                                 }}
@@ -151,13 +150,15 @@ export default class MainView extends React.Component {
                             this.clear();
                             const previous = this.pageIndex - 1;
                             this.pageIndex = previous < 0 ? this.pageCount - 1 : previous;
-                        })}>Previous Page</button>
+                        })}>Previous Page
+                        </button>
                         <span>{this.pageIndex + 1} / {this.pageCount}</span>
                         <button onClick={action(() => {
                             this.clear();
                             const next = this.pageIndex + 1;
                             this.pageIndex = next == this.pageCount ? 0 : next;
-                        })}>Next Page</button>
+                        })}>Next Page
+                        </button>
                     </div>
                 </div>
             </div>

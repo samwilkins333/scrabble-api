@@ -11,7 +11,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="scrabble-api" target="8" />
+      <module name="scrabble-api" target="11" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
