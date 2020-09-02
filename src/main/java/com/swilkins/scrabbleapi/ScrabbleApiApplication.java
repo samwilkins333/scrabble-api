@@ -12,6 +12,7 @@ import com.sun.jdi.event.ClassPrepareEvent;
 import com.sun.jdi.event.Event;
 import com.sun.jdi.event.EventSet;
 import com.sun.jdi.request.ClassPrepareRequest;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
@@ -28,6 +29,8 @@ public class ScrabbleApiApplication {
   }
 
   public static void main(String[] args) {
+    SpringApplication.run(ScrabbleApiApplication.class, args);
+
     LaunchingConnector launchingConnector = Bootstrap.virtualMachineManager().defaultConnector();
     Map<String, Connector.Argument> arguments = launchingConnector.defaultArguments();
     arguments.get("main").setValue(Fibonacci.class.getName() + " " + args[0]);
@@ -51,7 +54,6 @@ public class ScrabbleApiApplication {
     } catch (IOException | VMStartException | IllegalConnectorArgumentsException | InterruptedException | AbsentInformationException e) {
       e.printStackTrace();
     }
-//    SpringApplication.run(ScrabbleApiApplication.class, args);
 //    int i = 0;
 //    while (true) {
 //      synchronized (dereferencedVariables) {
