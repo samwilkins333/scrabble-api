@@ -8,7 +8,6 @@
     </JAVADOC>
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/com/swilkins/scrabble-base/scrabble-base/0.0.1/scrabble-base-0.0.1-sources.jar!/" />
-      <root url="jar://$MAVEN_REPOSITORY$/com/swilkins/scrabble-base/scrabble-base/0.0.1/scrabble-base-0.0.1.jar!/" />
     </SOURCES>
   </library>
 </component>

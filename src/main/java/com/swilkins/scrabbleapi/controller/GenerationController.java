@@ -23,13 +23,13 @@ import java.util.Set;
 
 import static com.swilkins.ScrabbleBase.Board.Configuration.*;
 import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
+import static com.swilkins.scrabbleapi.ScrabbleApiApplication.dereferencedVariables;
 
 @RestController
 public class GenerationController {
-  private static PermutationTrie trie;
+  private static final PermutationTrie trie = new PermutationTrie();
 
   static {
-    trie = new PermutationTrie();
     URL dictionary = GenerationController.class.getResource("/ospd4.txt");
     trie.loadFrom(dictionary, String::trim);
   }
@@ -40,6 +40,16 @@ public class GenerationController {
     GenerationContext.Options options = context.options;
     if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
       return null;
+    }
+    synchronized (dereferencedVariables) {
+      System.out.printf("Counter before waiting = %s\n", dereferencedVariables.get("status"));
+      dereferencedVariables.notifyAll();
+      try {
+        dereferencedVariables.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+      System.out.printf("Counter after waiting = %s\n", dereferencedVariables.get("status"));
     }
     Set<Integer> encounteredRows = new HashSet<>();
     for (BoardRow boardRow : boardSource) {
