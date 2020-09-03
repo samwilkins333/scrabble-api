@@ -125,6 +125,10 @@ export default class MainView extends React.Component {
         return this.pageIndex >= this.candidates.length ? [] : this.candidates[this.pageIndex]
     }
 
+    private proceed = async () => {
+        console.log(await Server.Post("/proceed", {depth: 1}));
+    }
+
     render() {
         return (
             <div className={"ssf w100 h100 flex col centering"}>
@@ -144,7 +148,7 @@ export default class MainView extends React.Component {
                     </div>
                 </div>
                 <div className={"flex col ma-v20"}>
-                    <button onClick={this.submitBoard}>Submit</button>
+                    <button onClick={this.proceed}>Submit</button>
                     <div className={"flex"}>
                         <button onClick={action(() => {
                             this.clear();

@@ -1,4 +1,4 @@
-package com.swilkins.scrabbleapi.controller;
+package com.swilkins.scrabbleapi.controller.generation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,9 +8,9 @@ import com.swilkins.ScrabbleBase.Board.State.Tile;
 import com.swilkins.ScrabbleBase.Generation.Generator;
 import com.swilkins.ScrabbleBase.Generation.GeneratorResult;
 import com.swilkins.ScrabbleBase.Vocabulary.PermutationTrie;
-import com.swilkins.scrabbleapi.model.BoardRow;
-import com.swilkins.scrabbleapi.model.GenerationContext;
-import com.swilkins.scrabbleapi.model.GenerationResponse;
+import com.swilkins.scrabbleapi.controller.generation.model.BoardRow;
+import com.swilkins.scrabbleapi.controller.generation.model.GenerationContext;
+import com.swilkins.scrabbleapi.controller.generation.model.GenerationResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,7 +23,6 @@ import java.util.Set;
 
 import static com.swilkins.ScrabbleBase.Board.Configuration.*;
 import static com.swilkins.ScrabbleBase.Generation.Generator.getDefaultOrdering;
-import static com.swilkins.scrabbleapi.FibonacciDebugger.dereferencedVariables;
 
 @RestController
 public class GenerationController {
@@ -40,16 +39,6 @@ public class GenerationController {
     GenerationContext.Options options = context.options;
     if (boardSource.size() > STANDARD_BOARD_DIMENSIONS) {
       return null;
-    }
-    synchronized (dereferencedVariables) {
-      System.out.printf("Counter before waiting = %s\n", dereferencedVariables.get("status"));
-      dereferencedVariables.notifyAll();
-      try {
-        dereferencedVariables.wait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-      System.out.printf("Counter after waiting = %s\n", dereferencedVariables.get("status"));
     }
     Set<Integer> encounteredRows = new HashSet<>();
     for (BoardRow boardRow : boardSource) {

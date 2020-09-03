@@ -1,4 +1,4 @@
-package com.swilkins.scrabbleapi.model;
+package com.swilkins.scrabbleapi.controller.generation.model;
 
 public class BoardRow {
 

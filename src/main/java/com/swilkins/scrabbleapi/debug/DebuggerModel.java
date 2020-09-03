@@ -33,14 +33,6 @@ public class DebuggerModel {
   private EventRequestManager eventRequestManager;
   private final Map<EventRequest, Boolean> eventRequestStateMap = new HashMap<>();
 
-  private final Object eventProcessingControl = new Object();
-  private final Object stepRequestControl = new Object();
-  private final Object threadReferenceControl = new Object();
-
-  private Integer activeStepRequestDepth;
-  private Integer requestedStepRequestDepth;
-  private final Map<Integer, StepRequest> stepRequestMap = new HashMap<>(3);
-
   private boolean deadlockSafeInvoke;
 
   public void setEventRequestManager(EventRequestManager eventRequestManager) {
@@ -208,61 +200,6 @@ public class DebuggerModel {
     return debugClasses.get(clazz);
   }
 
-  public void setRequestedStepRequestDepth(Integer requestedStepRequestDepth) {
-    this.requestedStepRequestDepth = requestedStepRequestDepth;
-  }
-
-  public void respondToRequestedStepRequestDepth(ThreadReference threadReference) {
-    synchronized (stepRequestControl) {
-      disableActiveStepRequest();
-      if (requestedStepRequestDepth == null) {
-        return;
-      }
-      if (activeStepRequestDepth == null || !activeStepRequestDepth.equals(requestedStepRequestDepth)) {
-        StepRequest requestedStepRequest = stepRequestMap.get(requestedStepRequestDepth);
-        if (requestedStepRequest == null) {
-          synchronized (threadReferenceControl) {
-            requestedStepRequest = eventRequestManager.createStepRequest(threadReference, STEP_LINE, requestedStepRequestDepth);
-          }
-          if (globalClassFilter != null) {
-            requestedStepRequest.addClassFilter(globalClassFilter);
-          }
-          stepRequestMap.put(requestedStepRequestDepth, requestedStepRequest);
-        }
-        setEventRequestEnabled(requestedStepRequest, true);
-        activeStepRequestDepth = requestedStepRequestDepth;
-      }
-    }
-  }
-
-  private void disableActiveStepRequest() {
-    synchronized (stepRequestControl) {
-      if (activeStepRequestDepth != null) {
-        StepRequest activeStepRequest = stepRequestMap.get(activeStepRequestDepth);
-        if (activeStepRequest != null) {
-          setEventRequestEnabled(activeStepRequest, false);
-        }
-        activeStepRequestDepth = null;
-      }
-    }
-  }
-
-  public void awaitEventProcessingContinuation() {
-    synchronized (eventProcessingControl) {
-      try {
-        eventProcessingControl.wait();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-  }
-
-  public void resumeEventProcessing() {
-    synchronized (eventProcessingControl) {
-      eventProcessingControl.notify();
-    }
-  }
-
   public void setEventRequestEnabled(EventRequest eventRequest, boolean enabled) {
     if (!deadlockSafeInvoke) {
       eventRequest.setEnabled(enabled);
@@ -280,6 +217,15 @@ public class DebuggerModel {
       eventRequestEntry.getKey().setEnabled(eventRequestEntry.getValue());
     }
     deadlockSafeInvoke = false;
+  }
+
+  public StepRequest createStepRequest(ThreadReference threadReference, Integer requestedStepRequestDepth) {
+    StepRequest stepRequest = eventRequestManager.createStepRequest(threadReference, STEP_LINE, requestedStepRequestDepth);
+    if (globalClassFilter != null) {
+      stepRequest.addClassFilter(globalClassFilter);
+    }
+    setEventRequestEnabled(stepRequest, true);
+    return stepRequest;
   }
 
 }

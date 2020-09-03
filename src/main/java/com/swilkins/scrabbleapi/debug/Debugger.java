@@ -4,6 +4,7 @@ import com.sun.jdi.*;
 import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.event.*;
+import com.sun.jdi.request.StepRequest;
 import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 import org.apache.commons.io.IOUtils;
 import org.reflections.Reflections;
@@ -28,11 +29,23 @@ public abstract class Debugger {
   protected final Map<Class<?>, Dereferencer> dereferencerMap = new HashMap<>();
   protected final Dereferencer toString = (object, thread) -> standardDereference(object, "toString", thread);
 
+  private final Object eventProcessingControl = new Object();
+  private final Object stepRequestControl = new Object();
+  private final Object threadReferenceControl = new Object();
+
+  private Integer activeStepRequestDepth;
+  private Integer requestedStepRequestDepth;
+  private final Map<Integer, StepRequest> stepRequestMap = new HashMap<>(3);
+
+  protected final Map<String, Object> dereferencedVariables = new HashMap<>();
+  protected DebugClassLocation suspendedLocation;
+
   public Debugger() throws IllegalArgumentException {
     debuggerModel = new DebuggerModel();
 
     Class<?> thisClass = getClass();
-    for (Class<?> sourceClass : new Reflections(packageName = thisClass.getPackageName()).getTypesAnnotatedWith(DebugClassSource.class)) {
+    Reflections reflections = new Reflections(packageName = thisClass.getPackageName());
+    for (Class<?> sourceClass : reflections.getTypesAnnotatedWith(DebugClassSource.class)) {
       DebugClassSource annotation = sourceClass.getAnnotation(DebugClassSource.class);
       for (Class<?> debuggerClass : annotation.debuggerClasses()) {
         if (debuggerClass.equals(thisClass)) {
@@ -52,13 +65,10 @@ public abstract class Debugger {
     virtualMachineArguments = main.args();
 
     configureDebuggerModel();
-
     configureDereferencers();
-
-    this.start();
   }
 
-  private void start() {
+  public void start() {
     LaunchingConnector launchingConnector = Bootstrap.virtualMachineManager().defaultConnector();
     Map<String, Connector.Argument> arguments = launchingConnector.defaultArguments();
     StringBuilder main = new StringBuilder(virtualMachineTargetClass.getName());
@@ -85,6 +95,8 @@ public abstract class Debugger {
             System.out.println(dereferenceValue(exceptionEvent.thread(), exceptionEvent.exception()));
           } else if (event instanceof LocatableEvent) {
             onVirtualMachineLocatableEvent((LocatableEvent) event, eventSet.size());
+            dereferencedVariables.clear();
+            suspendedLocation = null;
           }
         }
         virtualMachine.resume();
@@ -95,6 +107,9 @@ public abstract class Debugger {
         String virtualMachineOut = IOUtils.toString(process.getInputStream(), StandardCharsets.UTF_8);
         String virtualMachineError = IOUtils.toString(process.getErrorStream(), StandardCharsets.UTF_8);
         onVirtualMachineTermination(virtualMachineOut, virtualMachineError);
+        synchronized (eventProcessingControl) {
+          eventProcessingControl.notifyAll();
+        }
       } catch (IOException ignored) {
       }
     } catch (NoSuchMethodException e) {
@@ -137,15 +152,54 @@ public abstract class Debugger {
       return;
     }
     ThreadReference thread = event.thread();
-    onVirtualMachineSuspension(location, dereferenceVariables(thread));
-    debuggerModel.awaitEventProcessingContinuation();
-    debuggerModel.respondToRequestedStepRequestDepth(thread);
+    dereferenceVariables(thread);
+    suspendedLocation = location;
+    onVirtualMachineSuspension();
+    signalAndAwaitCoroutine();
+    respondToRequestedStepRequestDepth(thread);
     onVirtualMachineContinuation();
   }
 
-  protected abstract void onVirtualMachineSuspension(DebugClassLocation location, Map<String, Object> dereferencedVariables);
+  public void setRequestedStepRequestDepth(Integer requestedStepRequestDepth) {
+    this.requestedStepRequestDepth = requestedStepRequestDepth;
+  }
 
-  protected abstract void onVirtualMachineContinuation();
+  public void respondToRequestedStepRequestDepth(ThreadReference threadReference) {
+    synchronized (stepRequestControl) {
+      disableActiveStepRequest();
+      if (requestedStepRequestDepth == null) {
+        return;
+      }
+      if (activeStepRequestDepth == null || !activeStepRequestDepth.equals(requestedStepRequestDepth)) {
+        StepRequest requestedStepRequest = stepRequestMap.get(requestedStepRequestDepth);
+        if (requestedStepRequest == null) {
+          synchronized (threadReferenceControl) {
+            requestedStepRequest = debuggerModel.createStepRequest(threadReference, requestedStepRequestDepth);
+          }
+          stepRequestMap.put(requestedStepRequestDepth, requestedStepRequest);
+        }
+        debuggerModel.setEventRequestEnabled(requestedStepRequest, true);
+        activeStepRequestDepth = requestedStepRequestDepth;
+      }
+    }
+  }
+
+  private void disableActiveStepRequest() {
+    synchronized (stepRequestControl) {
+      if (activeStepRequestDepth != null) {
+        StepRequest activeStepRequest = stepRequestMap.get(activeStepRequestDepth);
+        if (activeStepRequest != null) {
+          debuggerModel.setEventRequestEnabled(activeStepRequest, false);
+        }
+        activeStepRequestDepth = null;
+      }
+    }
+  }
+
+  protected abstract void onVirtualMachineSuspension();
+
+  protected void onVirtualMachineContinuation() {
+  }
 
   protected void onVirtualMachineTermination(String virtualMachineOut, String virtualMachineError) {
     if (virtualMachineOut != null && !virtualMachineOut.isEmpty()) {
@@ -171,6 +225,17 @@ public abstract class Debugger {
     } catch (ClassNotFoundException ignored) {
     }
     return dereferencer;
+  }
+
+  public void signalAndAwaitCoroutine() {
+    synchronized (eventProcessingControl) {
+      try {
+        eventProcessingControl.notifyAll();
+        eventProcessingControl.wait();
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   protected Value invoke(ObjectReference object, ThreadReference thread, String toInvokeName, String signature, List<? extends Value> arguments) throws NoSuchMethodException {
@@ -199,17 +264,19 @@ public abstract class Debugger {
     }
   }
 
-  private Map<String, Object> dereferenceVariables(ThreadReference thread)
+  private void dereferenceVariables(ThreadReference thread)
           throws Exception {
     StackFrame frame = thread.frame(0);
-    Map<String, Object> dereferencedVariables = new HashMap<>();
     Map<LocalVariable, Value> values = frame.getValues(frame.visibleVariables());
     debuggerModel.deadlockSafeInvoke(() -> {
       for (Map.Entry<LocalVariable, Value> entry : values.entrySet()) {
         dereferencedVariables.put(entry.getKey().name(), dereferenceValue(thread, entry.getValue()));
       }
     });
-    return dereferencedVariables;
+  }
+
+  public Map<String, Object> getDereferencedVariables() {
+    return Collections.unmodifiableMap(dereferencedVariables);
   }
 
   protected Object standardDereference(ObjectReference value, String toInvokeName, ThreadReference thread) throws NoSuchMethodException {
@@ -262,6 +329,10 @@ public abstract class Debugger {
       }
     }
     return value;
+  }
+
+  public DebugClassLocation getSuspendedLocation() {
+    return suspendedLocation;
   }
 
 }
