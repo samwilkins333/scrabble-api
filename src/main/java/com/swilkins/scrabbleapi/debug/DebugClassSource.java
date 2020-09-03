@@ -4,38 +4,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public abstract class DebugClassSource {
+public class DebugClassSource {
 
   private final List<Integer> compileTimeBreakpoints = new ArrayList<>();
+  private final DebugSourceSupplier sourceSupplier;
   private boolean cached;
 
-  public DebugClassSource(boolean cached, int... compileTimeBreakpoints) {
-    this.cached = cached;
-    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
+  public DebugClassSource(DebugSourceSupplier sourceSupplier) {
+    this.sourceSupplier = sourceSupplier;
   }
 
-  public DebugClassSource(boolean cached) {
-    this.cached = cached;
+  public String getContentsAsString() throws Exception {
+    return sourceSupplier.get();
   }
-
-  public DebugClassSource(int... compileTimeBreakpoints) {
-    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
-  }
-
-  public DebugClassSource() {
-  }
-
-  public abstract String getContentsAsString() throws Exception;
 
   public List<Integer> getCompileTimeBreakpoints() {
     return Collections.unmodifiableList(compileTimeBreakpoints);
   }
 
   public void addCompileTimeBreakpoints(int... compileTimeBreakpoints) {
-    addCompileTimeBreakpointsHelper(compileTimeBreakpoints);
-  }
-
-  private void addCompileTimeBreakpointsHelper(int... compileTimeBreakpoints) {
     for (int compileTimeBreakpoint : compileTimeBreakpoints) {
       this.compileTimeBreakpoints.add(compileTimeBreakpoint);
     }

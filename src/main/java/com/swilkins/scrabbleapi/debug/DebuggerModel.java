@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,9 +40,8 @@ public class DebuggerModel {
     this.eventRequestManager = eventRequestManager;
   }
 
-  public DebugClassSource addDebugClassSource(Class<?> clazz, DebugClassSource debugClassSource) {
+  public void addDebugClassSource(Class<?> clazz, DebugClassSource debugClassSource) {
     debugClassSources.put(clazz, debugClassSource);
-    return debugClassSource;
   }
 
   private Class<?> sourceToClass(String source) throws ClassNotFoundException {
@@ -71,12 +71,10 @@ public class DebuggerModel {
     while (entries.hasMoreElements()) {
       sources.add(entries.nextElement().getRealName());
     }
-    return processSourcesList(sources, filter, source -> new DebugClassSource() {
-      @Override
-      public String getContentsAsString() throws Exception {
-        return IOUtils.toString(jarFile.getInputStream(jarFile.getEntry(source)), StandardCharsets.UTF_8);
-      }
-    });
+    return processSourcesList(sources, filter, sourcePath -> new DebugClassSource(() -> {
+      InputStream jarEntryStream = jarFile.getInputStream(jarFile.getEntry(sourcePath));
+      return IOUtils.toString(jarEntryStream, StandardCharsets.UTF_8);
+    }));
   }
 
   public Set<Class<?>> addDebugClassesFromDirectory(String directoryPath, DebugClassSourceFilter filter) throws IOException, ClassNotFoundException {
@@ -85,12 +83,10 @@ public class DebuggerModel {
       throw new IllegalArgumentException();
     }
     List<String> sources = Files.list(directory.toPath()).map(Path::toString).collect(Collectors.toList());
-    return processSourcesList(sources, filter, source -> new DebugClassSource() {
-      @Override
-      public String getContentsAsString() throws Exception {
-        return IOUtils.toString(new FileInputStream(new File(source)), StandardCharsets.UTF_8);
-      }
-    });
+    return processSourcesList(sources, filter, sourcePath -> new DebugClassSource(() -> {
+      InputStream fileStream = new FileInputStream(new File(sourcePath));
+      return IOUtils.toString(fileStream, StandardCharsets.UTF_8);
+    }));
   }
 
   private Set<Class<?>> processSourcesList(List<String> sources, DebugClassSourceFilter filter, Function<String, DebugClassSource> debugClassSourceProvider) throws ClassNotFoundException {

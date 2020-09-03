@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils;
 import org.reflections.Reflections;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
@@ -126,15 +127,13 @@ public abstract class Debugger {
       Class<?> clazz = entry.getValue();
       String internalPath = clazz.getName().replace(packageName, "").substring(1).replace(".", "/");
       String sourcePath = String.format("/src/%s.java", internalPath);
-      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = debuggerModel.addDebugClassSource(clazz,
-              new com.swilkins.scrabbleapi.debug.DebugClassSource() {
-                @Override
-                public String getContentsAsString() throws Exception {
-                  return IOUtils.toString(getClass().getResourceAsStream(sourcePath), StandardCharsets.UTF_8);
-                }
-              });
+      com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = new com.swilkins.scrabbleapi.debug.DebugClassSource(() -> {
+        InputStream sourceStream = getClass().getResourceAsStream(sourcePath);
+        return IOUtils.toString(sourceStream, StandardCharsets.UTF_8);
+      });
       debugClassSource.addCompileTimeBreakpoints(annotation.compileTimeBreakpoints());
       debugClassSource.setCached(annotation.cached());
+      debuggerModel.addDebugClassSource(clazz, debugClassSource);
     }
   }
 
