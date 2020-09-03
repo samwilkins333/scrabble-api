@@ -157,7 +157,6 @@ public abstract class Debugger {
     onVirtualMachineSuspension();
     signalAndAwaitCoroutine();
     respondToRequestedStepRequestDepth(thread);
-    onVirtualMachineContinuation();
   }
 
   public void setRequestedStepRequestDepth(Integer requestedStepRequestDepth) {
@@ -197,9 +196,6 @@ public abstract class Debugger {
   }
 
   protected abstract void onVirtualMachineSuspension();
-
-  protected void onVirtualMachineContinuation() {
-  }
 
   protected void onVirtualMachineTermination(String virtualMachineOut, String virtualMachineError) {
     if (virtualMachineOut != null && !virtualMachineOut.isEmpty()) {
