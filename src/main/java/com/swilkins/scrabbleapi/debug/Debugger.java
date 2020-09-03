@@ -152,7 +152,7 @@ public abstract class Debugger {
 
   protected void onVirtualMachineLocatableEvent(LocatableEvent event, int eventSetSize) throws Exception {
     DebugClassLocation location = debuggerModel.toDebugClassLocation(event.location());
-    if (location == null || eventSetSize > 1) {
+    if (location == null || (event instanceof BreakpointEvent && eventSetSize > 1)) {
       return;
     }
     ThreadReference thread = event.thread();
