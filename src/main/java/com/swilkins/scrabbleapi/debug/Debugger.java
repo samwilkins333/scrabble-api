@@ -55,7 +55,7 @@ public abstract class Debugger {
         scannedDebugClassSources.put(annotation, sourceClass);
         if (annotation.main()) {
           if (main != null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("Cannot specify more than one main class.");
           }
           main = annotation;
         }
@@ -64,7 +64,7 @@ public abstract class Debugger {
     }
 
     if (main == null) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("Must specify at least one main class.");
     }
 
     virtualMachineTargetClass = scannedDebugClassSources.get(main);
