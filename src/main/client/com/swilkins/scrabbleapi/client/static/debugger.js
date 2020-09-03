@@ -1,1 +1,1 @@
-const editor = CodeMirror(document.getElementById("editor"), { lineNumbers: true, mode: "javascript" });
+const editor = CodeMirror(document.getElementById("editor"), {lineNumbers: true, mode: "javascript"});
