@@ -3,7 +3,6 @@ package com.swilkins.scrabbleapi.controller.proceed;
 import com.swilkins.scrabbleapi.JDIDebuggerServer;
 import com.swilkins.scrabbleapi.controller.proceed.model.ProceedRequest;
 import com.swilkins.scrabbleapi.controller.proceed.model.ProceedResponse;
-import com.swilkins.scrabbleapi.debug.DebugClassLocation;
 import com.swilkins.scrabbleapi.debug.Debugger;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +19,7 @@ public class ProceedController {
 
     ProceedResponse response = new ProceedResponse();
     response.dereferencedVariables = debugger.getDereferencedVariables();
-
-    ProceedResponse.Location responseLocation = new ProceedResponse.Location();
-    DebugClassLocation location = debugger.getSuspendedLocation();
-    responseLocation.className = location.getDebugClass().getClazz().getName();
-    responseLocation.lineNumber = location.getLineNumber();
-
-    response.location = responseLocation;
+    response.location = debugger.getSuspendedLocation();
 
     return response;
   }

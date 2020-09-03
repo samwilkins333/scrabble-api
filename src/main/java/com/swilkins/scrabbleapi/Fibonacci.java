@@ -5,8 +5,8 @@ import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 @DebugClassSource(
         debuggerClasses = FibonacciDebugger.class,
         main = true,
-        args = "10",
-        compileTimeBreakpoints = 33,
+        args = "1",
+        compileTimeBreakpoints = {20, 33},
         cached = true
 )
 public class Fibonacci {
