@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class Debugger {
 
@@ -45,23 +44,29 @@ public abstract class Debugger {
     debuggerModel = new DebuggerModel();
 
     Class<?> thisClass = getClass();
+    DebugClassSource main = null;
     Reflections reflections = new Reflections(packageName = thisClass.getPackageName());
     for (Class<?> sourceClass : reflections.getTypesAnnotatedWith(DebugClassSource.class)) {
       DebugClassSource annotation = sourceClass.getAnnotation(DebugClassSource.class);
       for (Class<?> debuggerClass : annotation.debuggerClasses()) {
-        if (debuggerClass.equals(thisClass)) {
-          scannedDebugClassSources.put(annotation, sourceClass);
-          break;
+        if (!debuggerClass.equals(thisClass)) {
+          continue;
         }
+        scannedDebugClassSources.put(annotation, sourceClass);
+        if (annotation.main()) {
+          if (main != null) {
+            throw new IllegalArgumentException();
+          }
+          main = annotation;
+        }
+        break;
       }
     }
 
-    List<DebugClassSource> mainSources = scannedDebugClassSources.keySet().stream().filter(DebugClassSource::main).collect(Collectors.toList());
-    if (mainSources.size() != 1) {
+    if (main == null) {
       throw new IllegalArgumentException();
     }
 
-    DebugClassSource main = mainSources.get(0);
     virtualMachineTargetClass = scannedDebugClassSources.get(main);
     virtualMachineArguments = main.args();
 
