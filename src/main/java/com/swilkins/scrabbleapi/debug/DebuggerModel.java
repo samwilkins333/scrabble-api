@@ -101,17 +101,13 @@ public class DebuggerModel {
 
     if (filter != null) {
       Set<Class<?>> filteredClasses = filter.getFilteredClasses();
-      Set<Class<?>> excludes;
-
       Set<Class<?>> representedClassesKeySet = representedClasses.keySet();
-      if (filter.getFilterType() == DebugClassSourceFilterType.INCLUDE) {
-        excludes = new HashSet<>(representedClassesKeySet);
-        excludes.removeAll(filteredClasses);
-      } else {
-        excludes = filteredClasses;
-      }
 
-      representedClassesKeySet.removeAll(excludes);
+      if (filter.getFilterType() == DebugClassSourceFilterType.INCLUDE) {
+        representedClassesKeySet.retainAll(filteredClasses);
+      } else {
+        representedClassesKeySet.removeAll(filteredClasses);
+      }
     }
 
     for (Map.Entry<Class<?>, String> representedClass : representedClasses.entrySet()) {
