@@ -5,6 +5,7 @@ import com.sun.jdi.connect.Connector;
 import com.sun.jdi.connect.LaunchingConnector;
 import com.sun.jdi.event.*;
 import com.sun.jdi.request.StepRequest;
+import com.swilkins.scrabbleapi.JDIDebuggerServer;
 import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 import org.apache.commons.io.IOUtils;
 import org.reflections.Reflections;
@@ -22,7 +23,7 @@ public abstract class Debugger {
   protected final DebuggerModel debuggerModel;
   protected final Map<DebugClassSource, Class<?>> scannedDebugClassSources = new HashMap<>();
 
-  private final String packageName;
+  private final String rootPackageName;
   private final Class<?> virtualMachineTargetClass;
   private final String[] virtualMachineArguments;
 
@@ -40,12 +41,12 @@ public abstract class Debugger {
   protected final Map<String, Object> dereferencedVariables = new HashMap<>();
   protected DebugClassLocation suspendedLocation;
 
-  public Debugger() throws IllegalArgumentException {
+  public Debugger() throws IllegalArgumentException, IOException, ClassNotFoundException {
     debuggerModel = new DebuggerModel();
 
     Class<?> thisClass = getClass();
     DebugClassSource main = null;
-    Reflections reflections = new Reflections(packageName = thisClass.getPackageName());
+    Reflections reflections = new Reflections(this.rootPackageName = JDIDebuggerServer.class.getPackageName());
     for (Class<?> sourceClass : reflections.getTypesAnnotatedWith(DebugClassSource.class)) {
       DebugClassSource annotation = sourceClass.getAnnotation(DebugClassSource.class);
       for (Class<?> debuggerClass : annotation.debuggerClasses()) {
@@ -83,7 +84,11 @@ public abstract class Debugger {
     }
     arguments.get("main").setValue(main.toString());
 
-    configureVirtualMachineLaunch(arguments);
+    List<String> classPathEntries = new ArrayList<>();
+    configureVirtualMachineLaunch(arguments, classPathEntries);
+    if (!classPathEntries.isEmpty()) {
+      arguments.get("options").setValue(String.format("-cp \"%s\"", String.join(":", classPathEntries)));
+    }
 
     try {
       virtualMachine = launchingConnector.launch(arguments);
@@ -126,11 +131,11 @@ public abstract class Debugger {
     }
   }
 
-  protected void configureDebuggerModel() {
+  protected void configureDebuggerModel() throws IOException, ClassNotFoundException {
     for (Map.Entry<DebugClassSource, Class<?>> entry : scannedDebugClassSources.entrySet()) {
       DebugClassSource annotation = entry.getKey();
       Class<?> clazz = entry.getValue();
-      String internalPath = clazz.getName().replace(packageName, "").substring(1).replace(".", "/");
+      String internalPath = clazz.getName().replace(rootPackageName, "").substring(1).replace(".", "/");
       String sourcePath = String.format("/src/%s.java", internalPath);
       com.swilkins.scrabbleapi.debug.DebugClassSource debugClassSource = new com.swilkins.scrabbleapi.debug.DebugClassSource(() -> {
         InputStream sourceStream = getClass().getResourceAsStream(sourcePath);
@@ -146,8 +151,8 @@ public abstract class Debugger {
     dereferencerMap.put(AbstractCollection.class, (extendsAbstractCollection, thread) -> standardDereference(extendsAbstractCollection, "toArray", thread));
   }
 
-  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments) {
-    arguments.get("options").setValue("-cp target/classes");
+  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments, List<String> classPathEntries) {
+    classPathEntries.add("target/classes");
   }
 
   protected void onVirtualMachineLocatableEvent(LocatableEvent event, int eventSetSize) throws Exception {

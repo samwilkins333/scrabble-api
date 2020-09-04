@@ -1,4 +1,4 @@
-package com.swilkins.scrabbleapi;
+package com.swilkins.scrabbleapi.debuggers.fibonacci;
 
 import com.swilkins.scrabbleapi.debug.interfaces.DebugClassSource;
 

@@ -1,13 +1,14 @@
-package com.swilkins.scrabbleapi;
+package com.swilkins.scrabbleapi.debuggers.fibonacci;
 
 import com.swilkins.scrabbleapi.debug.Debugger;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 
 public class FibonacciDebugger extends Debugger {
 
-  public FibonacciDebugger() throws IllegalArgumentException {
+  public FibonacciDebugger() throws IllegalArgumentException, IOException, ClassNotFoundException {
     super();
   }
 
