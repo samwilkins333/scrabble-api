@@ -1,7 +1,7 @@
 let currentLocation = null;
 
 const editorDiv = document.getElementById("editor");
-const editor = CodeMirror(editorDiv, {
+editor = CodeMirror(editorDiv, {
     lineNumbers: true,
     mode: "text/x-java",
     matchBrackets: true,

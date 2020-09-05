@@ -1,7 +1,13 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-// import MainView from "./main_view";
+import CodeMirror from "codemirror";
+import Visualizer from "./visualizer";
 
-// declare const editor: any;
+declare const editor: CodeMirror.Editor;
 
-ReactDOM.render(<div>Hello there!</div>, document.getElementById("root"));
+ReactDOM.render(
+    <Visualizer
+        editor={editor}
+    />,
+    document.getElementById("root")
+);
