@@ -11,7 +11,7 @@ interface ControlsProps extends EditorProps {
 
 @observer
 export default class Controls extends React.Component<ControlsProps> {
-    @observable private enabled = true;
+    @observable private disabled = false;
 
     render() {
         return (
@@ -26,15 +26,15 @@ export default class Controls extends React.Component<ControlsProps> {
 
     @action
     private proceed = async (depth: StepRequestDepth) => {
-        this.enabled = false;
-        this.enabled = await this.props.proceed(depth);
+        this.disabled = true;
+        this.disabled = await this.props.proceed(depth);
     }
 
     private renderControlButton(label: string, depth: StepRequestDepth) {
         return (
             <button
                 onClick={() => this.proceed(depth)}
-                disabled={this.enabled}
+                disabled={this.disabled}
             >{label}</button>
         );
     }

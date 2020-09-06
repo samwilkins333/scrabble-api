@@ -51,7 +51,7 @@ export default class Visualizer extends React.Component<EditorProps> {
         if (!response.updatedLocation) {
             editor.setValue("");
             setTimeout(() => alert("Execution completed!"), 100);
-            return false;
+            return true;
         }
 
         const {updatedLocation, dereferencedVariables} = response;
@@ -68,7 +68,7 @@ export default class Visualizer extends React.Component<EditorProps> {
         this.scrollToLine(lineNumber);
         this.setHighlightAtLine(lineNumber, true);
 
-        return true;
+        return false;
     }
 
     private scrollToLine = (i: number) => {

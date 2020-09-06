@@ -87,7 +87,7 @@ public abstract class Debugger {
     List<String> classPathEntries = new ArrayList<>();
     configureVirtualMachineLaunch(arguments, classPathEntries);
     if (!classPathEntries.isEmpty()) {
-      arguments.get("options").setValue(String.format("-cp \"%s\"", String.join(":", classPathEntries)));
+      arguments.get("options").setValue(String.format("-cp \".:%s\"", String.join(":", classPathEntries)));
     }
 
     try {
