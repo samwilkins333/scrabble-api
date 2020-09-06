@@ -16,6 +16,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 
+import static java.lang.reflect.Modifier.isPublic;
+import static java.lang.reflect.Modifier.isStatic;
+
 public abstract class Debugger {
 
   protected final DebuggerModel debuggerModel;
@@ -52,6 +55,9 @@ public abstract class Debugger {
           if (main != null) {
             throw new IllegalArgumentException("Cannot specify more than one main class.");
           }
+          if (!isExecutable(sourceClass)) {
+            throw new IllegalArgumentException("Specified main class must be executable.");
+          }
           main = annotation;
         }
         break;
@@ -67,6 +73,16 @@ public abstract class Debugger {
 
     configureDebuggerModel();
     configureDereferencers();
+  }
+
+  private boolean isExecutable(Class<?> clazz) {
+    try {
+      java.lang.reflect.Method method = clazz.getMethod("main", String[].class);
+      int modifiers = method.getModifiers();
+      return isPublic(modifiers) && isStatic(modifiers) && method.getReturnType().equals(void.class);
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
   }
 
   public void start() {

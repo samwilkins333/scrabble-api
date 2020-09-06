@@ -1,6 +1,7 @@
 package com.swilkins.scrabbleapi;
 
 import com.swilkins.scrabbleapi.debug.Debugger;
+import com.swilkins.scrabbleapi.debuggers.fibonacci.FibonacciDebugger;
 import com.swilkins.scrabbleapi.debuggers.generator.GeneratorDebugger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
