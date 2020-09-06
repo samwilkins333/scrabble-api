@@ -5,7 +5,7 @@ const static = resolve(__dirname, "static");
 module.exports = {
     mode: 'production',
     entry: {
-        bundle: "./src/index.tsx"
+        bundle: "./src/Index.tsx"
     },
     devtool: "source-map",
     output: {

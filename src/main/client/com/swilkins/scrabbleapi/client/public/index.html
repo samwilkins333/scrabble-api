@@ -5,27 +5,19 @@
     <link rel="stylesheet" type="text/css" href="codemirror/lib/codemirror.css">
     <script src="codemirror/lib/codemirror.js"></script>
     <script src="codemirror/mode/clike/clike.js"></script>
-    <link rel="stylesheet" type="text/css" href="source_view.css">
 </head>
 <body>
 <div class="verticalHalf bbb" id="editor"></div>
-<div class="verticalHalf flex col">
-    <div id="controls" class="flex centered bbb">
-        <button onclick="proceed(null)">Continue</button>
-        <button onclick="proceed(2)">Step Over</button>
-        <button onclick="proceed(1)">Step Into</button>
-        <button onclick="proceed(3)">Step Out</button>
-    </div>
-    <div class="flex centered flex-grow">
-        <div id="variableNames" class="flex col flex-grow scrollable padded valueBox"></div>
-        <div id="variableValues" class="flex col flex-grow scrollable padded valueBox"></div>
-        <div id="root" class="flex col flex-grow scrollable padded valueBox"></div>
-    </div>
-</div>
+<div id="visualizer" class="verticalHalf flex col"></div>
 <script>
-    let editor;
+    const editor = CodeMirror(document.getElementById("editor"), {
+        lineNumbers: true,
+        mode: "text/x-java",
+        matchBrackets: true,
+        readOnly: "nocursor"
+    });
+    editor.setSize("100%", "100%");
 </script>
-<script src="source_view.js"></script>
 <script src="bundle.js"></script>
 </body>
 </html>

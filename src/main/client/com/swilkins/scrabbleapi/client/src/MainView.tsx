@@ -1,8 +1,8 @@
 import * as React from "react";
-import "./main_view.scss";
+import "./MainView.scss";
 import {observer} from "mobx-react";
 import {action, observable, runInAction} from "mobx";
-import {Server} from "./utilities";
+import {Server} from "./Utilities";
 
 const dimensions = 15;
 
@@ -74,6 +74,50 @@ export default class MainView extends React.Component {
         return <div>{...collector}</div>;
     }
 
+    private get currentPage() {
+        return this.pageIndex >= this.candidates.length ? [] : this.candidates[this.pageIndex]
+    }
+
+    render() {
+        return (
+            <div className={"ssf w100 h100 flex col centering"}>
+                <div className={"flex h50 w100 scroll flexgrow1"}>
+                    {this.cells}
+                    <div className={"flex col"}>
+                        {this.currentPage.map(candidate => (
+                            <span
+                                onClick={() => {
+                                    this.clear();
+                                    for (const {x, y, tile: {resolvedLetter}} of this.currentSelection = candidate) {
+                                        this.setValueAt(x, y, resolvedLetter);
+                                    }
+                                }}
+                            >{this.display(candidate)}</span>
+                        ))}
+                    </div>
+                </div>
+                <div className={"flex col ma-v20"}>
+                    <button onClick={this.proceed}>Submit</button>
+                    <div className={"flex"}>
+                        <button onClick={action(() => {
+                            this.clear();
+                            const previous = this.pageIndex - 1;
+                            this.pageIndex = previous < 0 ? this.pageCount - 1 : previous;
+                        })}>Previous Page
+                        </button>
+                        <span>{this.pageIndex + 1} / {this.pageCount}</span>
+                        <button onClick={action(() => {
+                            this.clear();
+                            const next = this.pageIndex + 1;
+                            this.pageIndex = next == this.pageCount ? 0 : next;
+                        })}>Next Page
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     private submitBoard = async () => {
         this.currentSelection = [];
         runInAction(() => this.pageCount = this.pageIndex = 0);
@@ -121,52 +165,8 @@ export default class MainView extends React.Component {
         }
     };
 
-    private get currentPage() {
-        return this.pageIndex >= this.candidates.length ? [] : this.candidates[this.pageIndex]
-    }
-
     private proceed = async () => {
         console.log(await Server.Post("/proceed", {depth: 1}));
-    }
-
-    render() {
-        return (
-            <div className={"ssf w100 h100 flex col centering"}>
-                <div className={"flex h50 w100 scroll flexgrow1"}>
-                    {this.cells}
-                    <div className={"flex col"}>
-                        {this.currentPage.map(candidate => (
-                            <span
-                                onClick={() => {
-                                    this.clear();
-                                    for (const {x, y, tile: {resolvedLetter}} of this.currentSelection = candidate) {
-                                        this.setValueAt(x, y, resolvedLetter);
-                                    }
-                                }}
-                            >{this.display(candidate)}</span>
-                        ))}
-                    </div>
-                </div>
-                <div className={"flex col ma-v20"}>
-                    <button onClick={this.proceed}>Submit</button>
-                    <div className={"flex"}>
-                        <button onClick={action(() => {
-                            this.clear();
-                            const previous = this.pageIndex - 1;
-                            this.pageIndex = previous < 0 ? this.pageCount - 1 : previous;
-                        })}>Previous Page
-                        </button>
-                        <span>{this.pageIndex + 1} / {this.pageCount}</span>
-                        <button onClick={action(() => {
-                            this.clear();
-                            const next = this.pageIndex + 1;
-                            this.pageIndex = next == this.pageCount ? 0 : next;
-                        })}>Next Page
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
     }
 
 }
