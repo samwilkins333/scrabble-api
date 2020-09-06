@@ -19,8 +19,8 @@ public class JDIDebuggerServer {
   public static void main(String[] args) {
     SpringApplication.run(JDIDebuggerServer.class, args);
     try {
-      (debugger = new FibonacciDebugger()).start();
-//      (debugger = new GeneratorDebugger()).start();
+//      (debugger = new FibonacciDebugger()).start();
+      (debugger = new GeneratorDebugger()).start();
     } catch (IOException | ClassNotFoundException e) {
       e.printStackTrace();
     }
