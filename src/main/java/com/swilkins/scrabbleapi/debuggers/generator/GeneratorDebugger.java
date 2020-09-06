@@ -15,7 +15,7 @@ public class GeneratorDebugger extends Debugger {
   }
 
   @Override
-  protected void configureDebuggerModel() throws IOException, ClassNotFoundException  {
+  protected void configureDebuggerModel() throws IOException, ClassNotFoundException {
     super.configureDebuggerModel();
     debuggerModel.addDebugClassSourcesFromJar(getClass().getResource(jarPathCore).getPath(), null);
   }

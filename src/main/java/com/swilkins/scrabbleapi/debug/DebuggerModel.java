@@ -27,13 +27,12 @@ import static com.sun.jdi.request.StepRequest.STEP_LINE;
 
 public class DebuggerModel {
 
+  private static final String JAVA_SUFFIX = ".java";
   private final Map<Class<?>, DebugClassSource> debugClassSources = new LinkedHashMap<>();
   private final Map<Class<?>, DebugClass> debugClasses = new LinkedHashMap<>();
-  private static final String JAVA_SUFFIX = ".java";
+  private final Map<EventRequest, Boolean> eventRequestStateMap = new HashMap<>();
   private String globalClassFilter = null;
   private EventRequestManager eventRequestManager;
-  private final Map<EventRequest, Boolean> eventRequestStateMap = new HashMap<>();
-
   private boolean deadlockSafeInvoke;
 
   public void setEventRequestManager(EventRequestManager eventRequestManager) {

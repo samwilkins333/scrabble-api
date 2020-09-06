@@ -18,28 +18,22 @@ import java.util.function.Function;
 
 public abstract class Debugger {
 
-  protected VirtualMachine virtualMachine;
-
   protected final DebuggerModel debuggerModel;
   protected final Map<DebugClassSource, Class<?>> scannedDebugClassSources = new HashMap<>();
-
+  protected final Map<Class<?>, Dereferencer> dereferencerMap = new HashMap<>();
+  protected final Dereferencer toString = (object, thread) -> standardDereference(object, "toString", thread);
+  protected final Map<String, Object> dereferencedVariables = new HashMap<>();
   private final String rootPackageName;
   private final Class<?> virtualMachineTargetClass;
   private final String[] virtualMachineArguments;
-
-  protected final Map<Class<?>, Dereferencer> dereferencerMap = new HashMap<>();
-  protected final Dereferencer toString = (object, thread) -> standardDereference(object, "toString", thread);
-
   private final Object eventProcessingControl = new Object();
   private final Object stepRequestControl = new Object();
   private final Object threadReferenceControl = new Object();
-
+  private final Map<Integer, StepRequest> stepRequestMap = new HashMap<>(3);
+  protected VirtualMachine virtualMachine;
+  protected DebugClassLocation suspendedLocation;
   private Integer activeStepRequestDepth;
   private Integer requestedStepRequestDepth;
-  private final Map<Integer, StepRequest> stepRequestMap = new HashMap<>(3);
-
-  protected final Map<String, Object> dereferencedVariables = new HashMap<>();
-  protected DebugClassLocation suspendedLocation;
 
   public Debugger() throws IllegalArgumentException, IOException, ClassNotFoundException {
     debuggerModel = new DebuggerModel();

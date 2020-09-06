@@ -28,13 +28,13 @@ public class DebugClassSource {
     }
   }
 
+  public boolean isCached() {
+    return cached;
+  }
+
   public DebugClassSource setCached(boolean cached) {
     this.cached = cached;
     return this;
-  }
-
-  public boolean isCached() {
-    return cached;
   }
 
 }
