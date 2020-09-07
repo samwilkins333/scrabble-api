@@ -51,7 +51,18 @@ button {
   padding: 5px;
 }
 
-.valueBox {
+.full_height_padded {
   height: calc(100% - 10px);
+}
+
+.half_width_padded {
   min-width: calc(50% - 10px);
+}
+
+.half_width {
+  min-width: 50%;
+}
+
+.full_height {
+  height: 100%;
 }

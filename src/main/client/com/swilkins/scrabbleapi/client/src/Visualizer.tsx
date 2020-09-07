@@ -1,7 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import CodeMirror from "codemirror";
-import {observable, runInAction} from "mobx";
+import {observable, ObservableMap, runInAction} from "mobx";
 import Controls from "./Controls";
 import {StepRequestDepth} from "./StepRequestDepth";
 import {Server} from "./Utilities";
@@ -15,8 +15,7 @@ export interface EditorProps {
 export default class Visualizer extends React.Component<EditorProps> {
     private controlsRef = React.createRef<Controls>();
     @observable private currentLocation: { className: string, lineNumber: number } | null = null;
-    @observable private variableNames: string[] = [];
-    @observable private variableValues: string[] = [];
+    private dereferencedVariables = new ObservableMap<string, any>();
 
     render() {
         return (
@@ -27,8 +26,7 @@ export default class Visualizer extends React.Component<EditorProps> {
                     proceed={this.proceed}
                 />
                 <div className="flex centered flex-grow">
-                    {this.renderValueBox(this.variableNames)}
-                    {this.renderValueBox(this.variableValues)}
+                    {this.renderValueBoxes()}
                 </div>
             </>
         );
@@ -39,10 +37,7 @@ export default class Visualizer extends React.Component<EditorProps> {
 
         this.currentLocation && this.setHighlightAtLine(this.currentLocation.lineNumber - 1, false);
 
-        runInAction(() => {
-            this.variableNames = [];
-            this.variableValues = [];
-        });
+        runInAction(() => this.dereferencedVariables.clear());
 
         const response = await Server.Post("/proceed", {
             depth,
@@ -57,9 +52,12 @@ export default class Visualizer extends React.Component<EditorProps> {
         const {updatedLocation, dereferencedVariables} = response;
 
         runInAction(() => {
-            this.variableNames = Object.keys(dereferencedVariables);
-            this.variableValues = Object.values(dereferencedVariables);
+            for (const variableName of Object.keys(dereferencedVariables)) {
+                this.dereferencedVariables.set(variableName, dereferencedVariables[variableName]);
+            }
         });
+
+        console.log(this.dereferencedVariables);
 
         if (!this.currentLocation || this.currentLocation.className !== updatedLocation.className) {
             editor.setValue(response.contentsAsString);
@@ -88,10 +86,26 @@ export default class Visualizer extends React.Component<EditorProps> {
         }
     }
 
-    private renderValueBox = (contents: string[]) => {
-        return <div
-            className="flex col flex-grow scrollable padded valueBox"
-        >{contents.map(item => <span>{item}</span>)}</div>
+    private renderValueBoxes = () => {
+        const namesSpanCollector: JSX.Element[] = [];
+        const valuesSpanCollector: JSX.Element[] = [];
+        this.dereferencedVariables.forEach((value, key) => {
+            namesSpanCollector.push(<span>{key}</span>);
+            if (Array.isArray(value)) {
+                value = `[${value.join(", ")}]`;
+            }
+            valuesSpanCollector.push(<span>{value}</span>);
+        });
+        return (
+            <>
+                <div className="flex col flex-grow scrollable padded full_height_padded half_width_padded">
+                    {...namesSpanCollector}
+                </div>
+                <div className="flex col flex-grow scrollable padded full_height_padded half_width_padded">
+                    {...valuesSpanCollector}
+                </div>
+            </>
+        )
     }
 
 }

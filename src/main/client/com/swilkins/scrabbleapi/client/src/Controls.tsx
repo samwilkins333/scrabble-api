@@ -15,7 +15,7 @@ export default class Controls extends React.Component<ControlsProps> {
 
     render() {
         return (
-            <div id="controls" className="flex centered bbb">
+            <div id="controls" className="flex centered bbb" style={{ backgroundColor: "#eee" }}>
                 {this.renderControlButton("Continue", StepRequestDepth.NONE)}
                 {this.renderControlButton("Step Over", StepRequestDepth.STEP_OVER)}
                 {this.renderControlButton("Step Into", StepRequestDepth.STEP_INTO)}

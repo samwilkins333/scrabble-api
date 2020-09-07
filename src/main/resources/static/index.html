@@ -7,8 +7,13 @@
     <script src="codemirror/mode/clike/clike.js"></script>
 </head>
 <body>
-<div class="verticalHalf bbb" id="editor"></div>
-<div id="visualizer" class="verticalHalf flex col"></div>
+<div class="flex full_height">
+    <div class="half_width" style="border-right: 1px solid black">
+        <div class="verticalHalf bbb" id="editor"></div>
+        <div id="visualizer" class="verticalHalf flex col"></div>
+    </div>
+    <div class="half_width"></div>
+</div>
 <script>
     const editor = CodeMirror(document.getElementById("editor"), {
         lineNumbers: true,
