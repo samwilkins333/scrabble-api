@@ -14,7 +14,6 @@ import com.swilkins.scrabbleapi.debug.Dereferencer;
 import java.io.IOException;
 
 public class GeneratorDebugger extends Debugger {
-  private static final String jarPathCore = "/lib/scrabble-base-0.0.1.jar";
 
   public GeneratorDebugger() throws IllegalArgumentException, IOException, ClassNotFoundException {
     super();
@@ -23,7 +22,8 @@ public class GeneratorDebugger extends Debugger {
   @Override
   protected void configureDebuggerModel() throws IOException, ClassNotFoundException {
     super.configureDebuggerModel();
-    importJar(getClass().getResource(jarPathCore).getPath(), null, true);
+    String jarPath = getClass().getResource("/lib/scrabble-base-0.0.1.jar").getPath();
+    importJar(jarPath, null, true);
   }
 
   @Override
