@@ -89,16 +89,7 @@ public abstract class Debugger {
   public void start() {
     LaunchingConnector launchingConnector = Bootstrap.virtualMachineManager().defaultConnector();
     Map<String, Connector.Argument> arguments = launchingConnector.defaultArguments();
-    StringBuilder main = new StringBuilder(virtualMachineTargetClass.getName());
-    for (Object virtualMachineArgument : virtualMachineArguments) {
-      main.append(" ").append(virtualMachineArgument);
-    }
-    arguments.get("main").setValue(main.toString());
-
     configureVirtualMachineLaunch(arguments);
-    String concatenatedClasspath = String.join(":", virtualMachineClasspathEntries);
-    arguments.get("options").setValue(String.format("-cp \".:%s\"", concatenatedClasspath));
-
     try {
       virtualMachine = launchingConnector.launch(arguments);
       debuggerModel.setEventRequestManager(virtualMachine.eventRequestManager());
@@ -142,6 +133,18 @@ public abstract class Debugger {
     }
   }
 
+  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments) {
+    StringBuilder main = new StringBuilder(virtualMachineTargetClass.getName());
+    for (Object virtualMachineArgument : virtualMachineArguments) {
+      main.append(" ").append(virtualMachineArgument);
+    }
+    arguments.get("main").setValue(main.toString());
+
+    virtualMachineClasspathEntries.add("target/classes");
+    String concatenatedClasspath = String.join(":", virtualMachineClasspathEntries);
+    arguments.get("options").setValue(String.format("-cp \".:%s\"", concatenatedClasspath));
+  }
+
   protected void configureDebuggerModel() throws IOException, ClassNotFoundException {
     for (Map.Entry<DebugClassSource, Class<?>> entry : scannedDebugClassSources.entrySet()) {
       DebugClassSource annotation = entry.getKey();
@@ -160,10 +163,6 @@ public abstract class Debugger {
 
   protected void configureDereferencers() {
     dereferencerMap.put(AbstractCollection.class, (extendsAbstractCollection, thread) -> standardDereference(extendsAbstractCollection, "toArray", thread));
-  }
-
-  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments) {
-    virtualMachineClasspathEntries.add("target/classes");
   }
 
   protected void onVirtualMachineLocatableEvent(LocatableEvent event, int eventSetSize) throws Exception {
