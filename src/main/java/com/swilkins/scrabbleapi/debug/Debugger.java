@@ -29,6 +29,7 @@ public abstract class Debugger {
   private final String rootPackageName;
   private final Class<?> virtualMachineTargetClass;
   private final String[] virtualMachineArguments;
+  private final List<String> virtualMachineClasspathEntries = new ArrayList<>();
   private final Object eventProcessingControl = new Object();
   private final Object stepRequestControl = new Object();
   private final Object threadReferenceControl = new Object();
@@ -94,11 +95,9 @@ public abstract class Debugger {
     }
     arguments.get("main").setValue(main.toString());
 
-    List<String> classPathEntries = new ArrayList<>();
-    configureVirtualMachineLaunch(arguments, classPathEntries);
-    if (!classPathEntries.isEmpty()) {
-      arguments.get("options").setValue(String.format("-cp \".:%s\"", String.join(":", classPathEntries)));
-    }
+    configureVirtualMachineLaunch(arguments);
+    String concatenatedClasspath = String.join(":", virtualMachineClasspathEntries);
+    arguments.get("options").setValue(String.format("-cp \".:%s\"", concatenatedClasspath));
 
     try {
       virtualMachine = launchingConnector.launch(arguments);
@@ -110,7 +109,9 @@ public abstract class Debugger {
       while ((eventSet = virtualMachine.eventQueue().remove()) != null) {
         for (Event event : eventSet) {
           if (event instanceof ClassPrepareEvent) {
-            debuggerModel.createDebugClassFrom((ClassPrepareEvent) event);
+            for (Map.Entry<Integer, Boolean> outcome : debuggerModel.createDebugClassFrom((ClassPrepareEvent) event).entrySet()) {
+              System.out.printf("%s compile time breakpoint at %d\n", outcome.getValue() ? "Successfully added" : "Failed to add", outcome.getKey());
+            }
           } else if (event instanceof ExceptionEvent) {
             ExceptionEvent exceptionEvent = (ExceptionEvent) event;
             System.out.println(dereferenceValue(exceptionEvent.thread(), exceptionEvent.exception()));
@@ -161,8 +162,8 @@ public abstract class Debugger {
     dereferencerMap.put(AbstractCollection.class, (extendsAbstractCollection, thread) -> standardDereference(extendsAbstractCollection, "toArray", thread));
   }
 
-  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments, List<String> classPathEntries) {
-    classPathEntries.add("target/classes");
+  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments) {
+    virtualMachineClasspathEntries.add("target/classes");
   }
 
   protected void onVirtualMachineLocatableEvent(LocatableEvent event, int eventSetSize) throws Exception {
@@ -288,6 +289,13 @@ public abstract class Debugger {
         dereferencedVariables.put(entry.getKey().name(), dereferenceValue(thread, entry.getValue()));
       }
     });
+  }
+
+  public void importJar(String jarPath, DebugClassSourceFilter filter, boolean addToVirtualMachineClasspath) throws IOException, ClassNotFoundException {
+    debuggerModel.addDebugClassSourcesFromJar(jarPath, filter);
+    if (addToVirtualMachineClasspath) {
+      virtualMachineClasspathEntries.add(jarPath);
+    }
   }
 
   public Map<String, Object> getDereferencedVariables() {

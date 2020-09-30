@@ -1,7 +1,6 @@
 package com.swilkins.scrabbleapi.debuggers.generator;
 
 import com.sun.jdi.ObjectReference;
-import com.sun.jdi.connect.Connector;
 import com.swilkins.ScrabbleBase.Board.Location.Coordinates;
 import com.swilkins.ScrabbleBase.Board.Location.TilePlacement;
 import com.swilkins.ScrabbleBase.Board.State.BoardSquare;
@@ -13,8 +12,6 @@ import com.swilkins.scrabbleapi.debug.Debugger;
 import com.swilkins.scrabbleapi.debug.Dereferencer;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 public class GeneratorDebugger extends Debugger {
   private static final String jarPathCore = "/lib/scrabble-base-0.0.1.jar";
@@ -26,13 +23,7 @@ public class GeneratorDebugger extends Debugger {
   @Override
   protected void configureDebuggerModel() throws IOException, ClassNotFoundException {
     super.configureDebuggerModel();
-    debuggerModel.addDebugClassSourcesFromJar(getClass().getResource(jarPathCore).getPath(), null);
-  }
-
-  @Override
-  protected void configureVirtualMachineLaunch(Map<String, Connector.Argument> arguments, List<String> classPathEntries) {
-    super.configureVirtualMachineLaunch(arguments, classPathEntries);
-    classPathEntries.add("src/main/resources" + jarPathCore);
+    importJar(getClass().getResource(jarPathCore).getPath(), null, true);
   }
 
   @Override

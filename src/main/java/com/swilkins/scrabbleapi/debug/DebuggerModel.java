@@ -136,16 +136,20 @@ public class DebuggerModel {
     setEventRequestEnabled(eventRequestManager.createExceptionRequest(null, notifyCaught, notifyUncaught), true);
   }
 
-  public void createDebugClassFrom(ClassPrepareEvent event) throws ClassNotFoundException, AbsentInformationException {
+  public Map<Integer, Boolean> createDebugClassFrom(ClassPrepareEvent event) throws ClassNotFoundException, AbsentInformationException {
     ReferenceType referenceType = event.referenceType();
     Class<?> clazz = Class.forName(referenceType.name());
+    System.out.printf("Creating DebugClass instance for %s\n", clazz);
     DebugClassSource debugClassSource = debugClassSources.get(clazz);
     DebugClass debugClass = new DebugClass(clazz, debugClassSource, referenceType::locationsOfLine);
     debugClass.setCached(debugClassSource.isCached());
+    Map<Integer, Boolean> addedBreakpoints = new HashMap<>(debugClassSource.getCompileTimeBreakpoints().size());
     for (int compileTimeBreakpoint : debugClassSource.getCompileTimeBreakpoints()) {
-      createBreakpointRequest(new DebugClassLocation(debugClass, compileTimeBreakpoint));
+      boolean success = createBreakpointRequest(new DebugClassLocation(debugClass, compileTimeBreakpoint));
+      addedBreakpoints.put(compileTimeBreakpoint, success);
     }
     debugClasses.put(clazz, debugClass);
+    return addedBreakpoints;
   }
 
   public BreakpointRequest getBreakpointRequestAt(DebugClassLocation selectedLocation) {
@@ -154,7 +158,7 @@ public class DebuggerModel {
     return getDebugClassFor(clazz).getBreakpointRequest(lineNumber);
   }
 
-  public void createBreakpointRequest(DebugClassLocation breakpointLocation) throws AbsentInformationException {
+  public boolean createBreakpointRequest(DebugClassLocation breakpointLocation) throws AbsentInformationException {
     DebugClass debugClass = breakpointLocation.getDebugClass();
     int lineNumber = breakpointLocation.getLineNumber();
     Location location = debugClass.getLocationOf(lineNumber);
@@ -162,7 +166,9 @@ public class DebuggerModel {
       BreakpointRequest breakpointRequest = eventRequestManager.createBreakpointRequest(location);
       setEventRequestEnabled(breakpointRequest, true);
       debugClass.addBreakpointRequest(lineNumber, breakpointRequest);
+      return true;
     }
+    return false;
   }
 
   public DebugClassLocation toDebugClassLocation(Location location) {

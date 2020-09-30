@@ -17,6 +17,21 @@ export default class Visualizer extends React.Component<EditorProps> {
     @observable private currentLocation: { className: string, lineNumber: number } | null = null;
     private dereferencedVariables = new ObservableMap<string, any>();
 
+    constructor(props: EditorProps) {
+        super(props);
+        props.editor.on("gutterClick", (e, n) => {
+            const info = e.lineInfo(n);
+            e.setGutterMarker(n, "breakpoints", info.gutterMarkers ? null : this.makeMarker())
+        })
+    }
+
+    private makeMarker = () => {
+        const marker = document.createElement("div");
+        marker.style.color = "#822";
+        marker.innerHTML = "●";
+        return marker;
+    }
+
     render() {
         return (
             <>
